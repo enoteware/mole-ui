@@ -858,12 +858,12 @@ func handleAnalyzeLarge(w http.ResponseWriter, r *http.Request) {
 
 // Storage breakdown types
 type StorageCategory struct {
-	Name      string `json:"name"`
-	Size      int64  `json:"size"`
-	SizeHuman string `json:"size_human"`
+	Name      string  `json:"name"`
+	Size      int64   `json:"size"`
+	SizeHuman string  `json:"size_human"`
 	Percent   float64 `json:"percent"`
-	Color     string `json:"color"`
-	Icon      string `json:"icon"`
+	Color     string  `json:"color"`
+	Icon      string  `json:"icon"`
 }
 
 type CleanupSuggestion struct {

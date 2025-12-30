@@ -23,9 +23,9 @@ type Volume struct {
 }
 
 type VolumeAnalysis struct {
-	Path       string             `json:"path"`
-	TotalSize  int64              `json:"total_size"`
-	Categories []StorageCategory  `json:"categories"`
+	Path       string            `json:"path"`
+	TotalSize  int64             `json:"total_size"`
+	Categories []StorageCategory `json:"categories"`
 }
 
 func handleListVolumes(w http.ResponseWriter, r *http.Request) {
