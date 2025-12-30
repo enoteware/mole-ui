@@ -152,7 +152,10 @@
                     <div class="glass rounded-2xl p-5 border border-zinc-700/50">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-zinc-400 text-sm font-medium">Memory</span>
-                            <span id="mem-usage" class="text-xl font-bold text-blue-400">--%</span>
+                            <div class="text-right">
+                                <div id="mem-usage" class="text-lg font-bold text-blue-400">-- / --</div>
+                                <div id="mem-percent" class="text-xs text-zinc-500">--%</div>
+                            </div>
                         </div>
                         <div class="w-full bg-zinc-700/50 rounded-full h-2">
                             <div id="mem-bar"
@@ -166,7 +169,10 @@
                     <div class="glass rounded-2xl p-5 border border-zinc-700/50">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-zinc-400 text-sm font-medium">Disk</span>
-                            <span id="disk-usage" class="text-xl font-bold text-emerald-400">--%</span>
+                            <div class="text-right">
+                                <div id="disk-usage" class="text-lg font-bold text-emerald-400">-- / --</div>
+                                <div id="disk-percent" class="text-xs text-zinc-500">--%</div>
+                            </div>
                         </div>
                         <div class="w-full bg-zinc-700/50 rounded-full h-2">
                             <div id="disk-bar"
@@ -797,13 +803,16 @@
             document.getElementById('cpu-cores').textContent = data.cpu.cores + ' cores';
 
             // Memory
-            document.getElementById('mem-usage').textContent = data.memory.percent.toFixed(1) + '%';
+            document.getElementById('mem-usage').textContent = formatBytes(data.memory.used) + ' / ' + formatBytes(data.memory.total);
+            document.getElementById('mem-percent').textContent = data.memory.percent.toFixed(1) + '%';
             document.getElementById('mem-bar').style.width = data.memory.percent + '%';
-            document.getElementById('mem-detail').textContent = formatBytes(data.memory.used) + ' / ' + formatBytes(data.memory.total);
+            document.getElementById('mem-detail').textContent = formatBytes(data.memory.available) + ' available';
             document.getElementById('total-ram').textContent = formatBytes(data.memory.total);
 
             // Disk
-            document.getElementById('disk-usage').textContent = data.disk.percent.toFixed(1) + '%';
+            const diskUsed = data.disk.total - data.disk.free;
+            document.getElementById('disk-usage').textContent = formatBytes(diskUsed) + ' / ' + formatBytes(data.disk.total);
+            document.getElementById('disk-percent').textContent = data.disk.percent.toFixed(1) + '%';
             document.getElementById('disk-bar').style.width = data.disk.percent + '%';
             document.getElementById('disk-detail').textContent = formatBytes(data.disk.free) + ' free';
             document.getElementById('total-disk').textContent = formatBytes(data.disk.total);
