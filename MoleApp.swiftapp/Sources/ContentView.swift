@@ -48,18 +48,28 @@ struct ContentView: View {
 
 struct WebView: NSViewRepresentable {
     let url: URL
-    
+
     func makeNSView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
-        
+
+        // Disable all caching to prevent stale UI
+        configuration.websiteDataStore = WKWebsiteDataStore.nonPersistent()
+
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
+
+        // Clear all cached data when creating the web view
+        let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+        WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, modifiedSince: Date(timeIntervalSince1970: 0)) { }
+
         return webView
     }
-    
+
     func updateNSView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
+        // Force reload without cache
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         webView.load(request)
     }
     

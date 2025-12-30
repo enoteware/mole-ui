@@ -128,3 +128,92 @@
     1. Reproduce with a new BATS test in `tests/`.
     2. Fix logic.
     3. Verify with `./scripts/run-tests.sh`.
+
+## 8. Native App Updates (Sparkle)
+
+The native macOS app (`Mole.app`) uses **Sparkle** for automatic updates. This is the industry standard for non-App Store Mac apps.
+
+### Overview
+
+- **Framework**: [Sparkle](https://sparkle-project.org/) - Open-source update framework
+- **Distribution**: GitHub Releases (host DMG/ZIP + appcast.xml)
+- **Signing**: EdDSA keys for update verification
+
+### Setup Requirements
+
+1. **Add Sparkle via Swift Package Manager**:
+   ```
+   https://github.com/sparkle-project/Sparkle
+   ```
+
+2. **Generate EdDSA Keys** (one-time setup):
+   ```bash
+   # Using Sparkle's generate_keys tool
+   ./bin/generate_keys
+   # Outputs: private key (keep secret!) + public key (embed in app)
+   ```
+
+3. **Configure Info.plist**:
+   ```xml
+   <key>SUFeedURL</key>
+   <string>https://raw.githubusercontent.com/enoteware/mole-ui/main/appcast.xml</string>
+   <key>SUPublicEDKey</key>
+   <string>YOUR_PUBLIC_ED_KEY_HERE</string>
+   ```
+
+4. **Host appcast.xml** (version feed):
+   ```xml
+   <?xml version="1.0" encoding="utf-8"?>
+   <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+     <channel>
+       <title>Mole Updates</title>
+       <item>
+         <title>Version 1.1.0</title>
+         <sparkle:version>1.1.0</sparkle:version>
+         <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+         <pubDate>Mon, 30 Dec 2024 12:00:00 +0000</pubDate>
+         <enclosure url="https://github.com/enoteware/mole-ui/releases/download/v1.1.0/Mole.dmg"
+                    sparkle:edSignature="SIGNATURE_HERE"
+                    length="7200000"
+                    type="application/octet-stream"/>
+       </item>
+     </channel>
+   </rss>
+   ```
+
+### Implementation in Swift
+
+```swift
+import Sparkle
+
+// In App.swift or AppDelegate
+let updaterController = SPUStandardUpdaterController(
+    startingUpdater: true,
+    updaterDelegate: nil,
+    userDriverDelegate: nil
+)
+
+// Add menu item for "Check for Updates..."
+Button("Check for Updates...") {
+    updaterController.checkForUpdates(nil)
+}
+```
+
+### Release Workflow
+
+1. **Build & Sign**: `./build-installer.sh` (code sign + notarize)
+2. **Generate Appcast**: Run Sparkle's `generate_appcast` tool on your releases folder
+3. **Upload**: Push DMG to GitHub Releases, commit updated appcast.xml
+4. **Users Get Notified**: Sparkle checks feed and prompts for update
+
+### Key Files
+
+- `Mole.app/` - Native Swift app bundle (add Sparkle here)
+- `appcast.xml` - Version feed (host at repo root or GitHub Pages)
+- `build-installer.sh` - Build script (add signing/notarization steps)
+
+### Security Notes
+
+- **Never commit the private EdDSA key** - store in CI secrets or local keychain
+- **Always notarize** the app for Gatekeeper compliance
+- Sparkle validates signatures before installing updates
