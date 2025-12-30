@@ -1,20 +1,47 @@
 <div align="center">
-  <h1>Mole</h1>
-  <p><em>Deep clean and optimize your Mac.</em></p>
+  <h1>Mole Web UI</h1>
+  <p><em>Deep clean and optimize your Mac - now with a beautiful web dashboard!</em></p>
 </div>
 
 <p align="center">
-  <a href="https://github.com/tw93/mole/stargazers"><img src="https://img.shields.io/github/stars/tw93/mole?style=flat-square" alt="Stars"></a>
-  <a href="https://github.com/tw93/mole/releases"><img src="https://img.shields.io/github/v/tag/tw93/mole?label=version&style=flat-square" alt="Version"></a>
+  <a href="https://github.com/enoteware/mole-ui/stargazers"><img src="https://img.shields.io/github/stars/enoteware/mole-ui?style=flat-square" alt="Stars"></a>
+  <a href="https://github.com/enoteware/mole-ui/releases"><img src="https://img.shields.io/github/v/tag/enoteware/mole-ui?label=version&style=flat-square" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"></a>
-  <a href="https://github.com/tw93/mole/commits"><img src="https://img.shields.io/github/commit-activity/m/tw93/mole?style=flat-square" alt="Commits"></a>
-  <a href="https://twitter.com/HiTw93"><img src="https://img.shields.io/badge/follow-Tw93-red?style=flat-square&logo=Twitter" alt="Twitter"></a>
-  <a href="https://t.me/+GclQS9ZnxyI2ODQ1"><img src="https://img.shields.io/badge/chat-Telegram-blueviolet?style=flat-square&logo=Telegram" alt="Telegram"></a>
+  <a href="https://github.com/tw93/mole"><img src="https://img.shields.io/badge/based%20on-Mole-orange?style=flat-square" alt="Original Mole"></a>
 </p>
 
 <p align="center">
   <img src="https://cdn.tw93.fun/img/mole.jpeg" alt="Mole - 95.50GB freed" width="800" />
 </p>
+
+## 🎉 What's New in This Fork
+
+This is an enhanced version of [Mole](https://github.com/tw93/mole) with:
+
+### 🌐 **Web UI Dashboard**
+- Beautiful, responsive web interface built with Tailwind CSS
+- Real-time system monitoring with Server-Sent Events
+- Mobile-friendly design with dark theme
+- Connection quality indicators and toast notifications
+
+### 📦 **Native macOS App**
+- **No terminal needed!** Just double-click to run
+- Drag-and-drop DMG installer (6.9MB)
+- Auto-starts web server and opens dashboard
+- macOS notifications for status updates
+- Perfect for family members who aren't technical
+
+### 🌍 **Network Installer**
+- One-line installer command for deploying to multiple Macs
+- Works via hostname (.local) or IP address
+- Automatic dependency installation (Go, build tools)
+- Deploy from central Mac Mini to all family machines
+
+### 🛠️ **For Developers**
+- Go backend with embedded templates
+- REST API for all Mole features
+- Built-in health checks and logging
+- Easy to extend and customize
 
 ## Features
 
@@ -26,19 +53,45 @@
 
 ## Quick Start
 
-**Installation:**
+### 🎯 **Option 1: Native Mac App (Easiest!)**
+
+Perfect for non-technical users:
+
+1. **Download** [Mole-Installer.dmg](https://github.com/enoteware/mole-ui/releases/latest)
+2. **Double-click** the DMG to open it
+3. **Drag** Mole.app to Applications folder
+4. **Open** Mole from Applications
+
+That's it! The web dashboard will open automatically at http://localhost:8081
+
+### 🌐 **Option 2: Network Deployment**
+
+Deploy to multiple Macs on your network:
+
+From Mac Mini (server):
+```bash
+cd Mole-main
+./deploy/start.sh
+```
+
+From client Macs:
+```bash
+# Using hostname
+curl -fsSL http://YourMacMini.local:8081/install.sh | bash
+
+# Using IP (more reliable)
+curl -fsSL http://10.112.1.56:8081/install.sh | bash
+```
+
+### ⌨️ **Option 3: Command Line (Original)**
+
+For terminal users who prefer the CLI:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tw93/mole/main/install.sh | bash
 ```
 
-Or via Homebrew:
-
-```bash
-brew install tw93/tap/mole
-```
-
-**Run:**
+**Run commands:**
 
 ```bash
 mo                           # Interactive menu
@@ -211,6 +264,83 @@ curl -fsSL https://raw.githubusercontent.com/tw93/Mole/main/scripts/setup-quick-
 ```
 
 Adds 5 commands: `clean`, `uninstall`, `optimize`, `analyze`, `status`. Mole automatically detects your terminal, or you can set `MO_LAUNCHER_APP=<name>` to override. For Raycast, run "Reload Script Directories" to load the new commands.
+
+## Building from Source
+
+### Prerequisites
+- **Go 1.21+** - Install via `brew install go`
+- **Git** - For cloning the repository
+
+### Build Web UI
+
+```bash
+# Clone the repository
+git clone https://github.com/enoteware/mole-ui.git
+cd mole-ui
+
+# Build the web server
+go build -o bin/web-go ./cmd/web/
+
+# Run the web UI
+./deploy/start.sh
+
+# Access at http://localhost:8081
+```
+
+### Build Native macOS App
+
+```bash
+# Build everything and create DMG installer
+./build-installer.sh
+
+# This creates:
+# - Mole.app (native Mac application)
+# - Mole-Installer.dmg (DMG installer for distribution)
+```
+
+The build script:
+1. Builds the Go web server binary
+2. Creates the .app bundle structure
+3. Packages it as a DMG installer (6.9MB)
+
+Files created:
+- `Mole.app` - Ready to copy to Applications
+- `Mole-Installer.dmg` - Drag-and-drop installer for sharing
+
+### Build CLI Tools
+
+```bash
+# Build the analyze tool
+./scripts/build-analyze.sh
+
+# Build the status monitor
+./scripts/build-status.sh
+```
+
+### Development
+
+```bash
+# Run tests
+./tests/run.sh
+
+# Format code
+./scripts/format.sh
+
+# Run shellcheck
+./scripts/check.sh
+
+# Set up git hooks
+./scripts/setup-hooks.sh
+```
+
+## Architecture
+
+- **cmd/web/** - Web UI server (Go + embedded HTML/CSS)
+- **cmd/analyze/** - Disk usage analyzer
+- **cmd/status/** - System monitoring dashboard
+- **lib/** - Core shell script libraries
+- **Mole.app/** - Native macOS app wrapper
+- **electron-app/** - Electron wrapper (experimental)
 
 ## Community Love
 
