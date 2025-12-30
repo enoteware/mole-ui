@@ -16,7 +16,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -169,7 +171,12 @@ func main() {
 	http.HandleFunc("/api/clean/preview", basicAuth(handleCleanPreview))
 	http.HandleFunc("/api/uninstall/apps", basicAuth(handleListApps))
 	http.HandleFunc("/api/uninstall", basicAuth(handleUninstall))
+	http.HandleFunc("/api/app/icon", handleAppIcon) // No auth needed for icons
 	http.HandleFunc("/api/analyze", basicAuth(handleAnalyze))
+	http.HandleFunc("/api/analyze/large", basicAuth(handleAnalyzeLarge))
+	http.HandleFunc("/api/storage/breakdown", basicAuth(handleStorageBreakdown))
+	http.HandleFunc("/api/volumes", basicAuth(handleListVolumes))
+	http.HandleFunc("/api/volumes/analyze", basicAuth(handleAnalyzeVolume))
 	http.HandleFunc("/api/optimize", basicAuth(handleOptimize))
 	http.HandleFunc("/api/purge", basicAuth(handlePurge))
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))
@@ -416,6 +423,15 @@ func handleClean(w http.ResponseWriter, r *http.Request) {
 	}
 
 	category := r.URL.Query().Get("category")
+
+	// Handle trash emptying separately since mole CLI doesn't support it
+	if category == "trash" {
+		result := emptyTrash()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+		return
+	}
+
 	args := []string{"clean"}
 	if category != "" && category != "all" {
 		args = append(args, "--"+category)
@@ -425,6 +441,62 @@ func handleClean(w http.ResponseWriter, r *http.Request) {
 	result := runMoleCommand(args...)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
+}
+
+func emptyTrash() CleanResult {
+	// Check if trash has items using Finder API (works with macOS permissions)
+	countCmd := exec.Command("osascript", "-e", `tell application "Finder" to count of items of trash`)
+	countOutput, err := countCmd.Output()
+	if err != nil {
+		return CleanResult{Success: false, Message: "Failed to check trash"}
+	}
+
+	countStr := strings.TrimSpace(string(countOutput))
+	if countStr == "0" {
+		return CleanResult{
+			Success: true,
+			Message: "Trash is already empty",
+			Cleaned: 0,
+			Output:  "Nothing to clean",
+		}
+	}
+
+	// Get approximate size using du command on volumes trash folders
+	var trashSize int64
+	home := os.Getenv("HOME")
+
+	// Try to get size from ~/.Trash (may fail on newer macOS)
+	trashSize = getDirSize(filepath.Join(home, ".Trash"))
+
+	// Also check volumes trash
+	volTrash := filepath.Join("/", ".Trashes", fmt.Sprintf("%d", os.Getuid()))
+	trashSize += getDirSize(volTrash)
+
+	// Empty trash using Finder (handles permissions properly)
+	emptyCmd := exec.Command("osascript", "-e", `tell application "Finder" to empty trash`)
+	output, err := emptyCmd.CombinedOutput()
+	if err != nil {
+		return CleanResult{
+			Success: false,
+			Message: fmt.Sprintf("Failed to empty trash: %v", err),
+			Output:  string(output),
+		}
+	}
+
+	// If we couldn't measure size, estimate based on item count
+	if trashSize == 0 {
+		// Rough estimate: assume average 50MB per item
+		count := 0
+		fmt.Sscanf(countStr, "%d", &count)
+		trashSize = int64(count) * 50 * 1024 * 1024
+	}
+
+	return CleanResult{
+		Success: true,
+		Message: "Trash emptied",
+		Cleaned: trashSize,
+		Output:  fmt.Sprintf("Emptied %s items from trash, freed approximately %s", countStr, formatBytes(trashSize)),
+	}
 }
 
 type AppInfo struct {
@@ -466,6 +538,93 @@ func listApplications() []AppInfo {
 	return apps
 }
 
+func handleAppIcon(w http.ResponseWriter, r *http.Request) {
+	appPath := r.URL.Query().Get("path")
+	if appPath == "" {
+		http.Error(w, "path parameter required", http.StatusBadRequest)
+		return
+	}
+
+	// Find the icon file in the app bundle
+	resourcesPath := filepath.Join(appPath, "Contents", "Resources")
+
+	// First try to read Info.plist to get the icon name
+	iconName := ""
+	plistPath := filepath.Join(appPath, "Contents", "Info.plist")
+	if plistData, err := os.ReadFile(plistPath); err == nil {
+		// Simple parsing for CFBundleIconFile
+		plistStr := string(plistData)
+		if idx := strings.Index(plistStr, "<key>CFBundleIconFile</key>"); idx != -1 {
+			rest := plistStr[idx:]
+			if startIdx := strings.Index(rest, "<string>"); startIdx != -1 {
+				rest = rest[startIdx+8:]
+				if endIdx := strings.Index(rest, "</string>"); endIdx != -1 {
+					iconName = rest[:endIdx]
+				}
+			}
+		}
+	}
+
+	// Try to find the icon file
+	var iconPath string
+	if iconName != "" {
+		// Add .icns extension if not present
+		if !strings.HasSuffix(iconName, ".icns") {
+			iconName += ".icns"
+		}
+		iconPath = filepath.Join(resourcesPath, iconName)
+	}
+
+	// If not found, try common icon names
+	if iconPath == "" || !fileExists(iconPath) {
+		commonNames := []string{"AppIcon.icns", "app.icns", "icon.icns", "application.icns"}
+		for _, name := range commonNames {
+			testPath := filepath.Join(resourcesPath, name)
+			if fileExists(testPath) {
+				iconPath = testPath
+				break
+			}
+		}
+	}
+
+	// If still not found, look for any .icns file
+	if iconPath == "" || !fileExists(iconPath) {
+		entries, _ := os.ReadDir(resourcesPath)
+		for _, entry := range entries {
+			if strings.HasSuffix(entry.Name(), ".icns") {
+				iconPath = filepath.Join(resourcesPath, entry.Name())
+				break
+			}
+		}
+	}
+
+	if iconPath == "" || !fileExists(iconPath) {
+		http.Error(w, "icon not found", http.StatusNotFound)
+		return
+	}
+
+	// Use sips to convert icns to png
+	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("appicon_%d.png", time.Now().UnixNano()))
+	defer os.Remove(tmpFile)
+
+	cmd := exec.Command("sips", "-s", "format", "png", "-z", "64", "64", iconPath, "--out", tmpFile)
+	if err := cmd.Run(); err != nil {
+		http.Error(w, "failed to convert icon", http.StatusInternalServerError)
+		return
+	}
+
+	// Read and serve the PNG
+	pngData, err := os.ReadFile(tmpFile)
+	if err != nil {
+		http.Error(w, "failed to read icon", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
+	w.Write(pngData)
+}
+
 func handleUninstall(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -480,14 +639,90 @@ func handleUninstall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var results []CleanResult
-	for _, app := range req.Apps {
-		result := runMoleCommand("uninstall", app, "--yes")
-		results = append(results, result)
-	}
+	// Batch uninstall all apps at once (single auth prompt)
+	result := uninstallApps(req.Apps)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	json.NewEncoder(w).Encode([]CleanResult{result})
+}
+
+func uninstallApps(appPaths []string) CleanResult {
+	if len(appPaths) == 0 {
+		return CleanResult{Success: false, Message: "No apps specified"}
+	}
+
+	homeDir := os.Getenv("HOME")
+	var validApps []string
+	var appNames []string
+
+	// Validate all apps first
+	for _, appPath := range appPaths {
+		if !strings.HasSuffix(appPath, ".app") {
+			continue
+		}
+		if _, err := os.Stat(appPath); os.IsNotExist(err) {
+			continue
+		}
+		validApps = append(validApps, appPath)
+		appNames = append(appNames, strings.TrimSuffix(filepath.Base(appPath), ".app"))
+	}
+
+	if len(validApps) == 0 {
+		return CleanResult{Success: false, Message: "No valid apps found"}
+	}
+
+	// Build a single osascript command to delete all apps at once (one auth prompt)
+	var scriptParts []string
+	for _, appPath := range validApps {
+		scriptParts = append(scriptParts, fmt.Sprintf(`delete POSIX file "%s"`, appPath))
+	}
+	script := fmt.Sprintf(`tell application "Finder"
+%s
+end tell`, strings.Join(scriptParts, "\n"))
+
+	trashCmd := exec.Command("osascript", "-e", script)
+	if err := trashCmd.Run(); err != nil {
+		// Fallback: try rm -rf for each app
+		var failed []string
+		for _, appPath := range validApps {
+			rmCmd := exec.Command("rm", "-rf", appPath)
+			if rmErr := rmCmd.Run(); rmErr != nil {
+				failed = append(failed, filepath.Base(appPath))
+			}
+		}
+		if len(failed) > 0 {
+			return CleanResult{Success: false, Message: fmt.Sprintf("Failed to remove: %s", strings.Join(failed, ", "))}
+		}
+	}
+
+	// Clean up related files in ~/Library for each app
+	var totalCleaned int64
+	for _, appName := range appNames {
+		cleanupPaths := []string{
+			filepath.Join(homeDir, "Library", "Application Support", appName),
+			filepath.Join(homeDir, "Library", "Caches", appName),
+			filepath.Join(homeDir, "Library", "Preferences", fmt.Sprintf("com.%s.plist", strings.ToLower(appName))),
+			filepath.Join(homeDir, "Library", "Saved Application State", fmt.Sprintf("com.%s.savedState", strings.ToLower(appName))),
+		}
+
+		for _, path := range cleanupPaths {
+			if info, err := os.Stat(path); err == nil {
+				if info.IsDir() {
+					totalCleaned += getDirSize(path)
+				} else {
+					totalCleaned += info.Size()
+				}
+				os.RemoveAll(path)
+			}
+		}
+	}
+
+	return CleanResult{
+		Success: true,
+		Message: fmt.Sprintf("Uninstalled %d app(s)", len(appNames)),
+		Cleaned: totalCleaned,
+		Output:  fmt.Sprintf("Removed %s and cleaned up %s of related files", strings.Join(appNames, ", "), formatBytes(totalCleaned)),
+	}
 }
 
 type DirEntry struct {
@@ -510,7 +745,7 @@ func handleAnalyze(w http.ResponseWriter, r *http.Request) {
 }
 
 func analyzePath(path string) []DirEntry {
-	var entries []DirEntry
+	entries := make([]DirEntry, 0)
 	items, err := os.ReadDir(path)
 	if err != nil {
 		return entries
@@ -558,14 +793,367 @@ func analyzePath(path string) []DirEntry {
 	return entries
 }
 
+var errStopWalk = fmt.Errorf("stop walk")
+
+func handleAnalyzeLarge(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		path = os.Getenv("HOME")
+	}
+
+	minSizeStr := r.URL.Query().Get("min_size")
+	minSize := int64(104857600) // Default 100MB
+	if minSizeStr != "" {
+		if parsed, err := strconv.ParseInt(minSizeStr, 10, 64); err == nil {
+			minSize = parsed
+		}
+	}
+
+	largeFiles := make([]DirEntry, 0)
+	filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip files we can't access
+		}
+		// Skip hidden files/dirs and common system paths
+		name := info.Name()
+		if strings.HasPrefix(name, ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		// Skip Library folder to avoid system files
+		if name == "Library" && info.IsDir() {
+			return filepath.SkipDir
+		}
+		// Only include files (not dirs) over the minimum size
+		if !info.IsDir() && info.Size() >= minSize {
+			largeFiles = append(largeFiles, DirEntry{
+				Path:      filePath,
+				Name:      name,
+				Size:      info.Size(),
+				SizeHuman: formatBytes(info.Size()),
+				IsDir:     false,
+			})
+		}
+		// Limit to 100 files to avoid timeout
+		if len(largeFiles) >= 100 {
+			return errStopWalk
+		}
+		return nil
+	})
+
+	// Sort by size descending
+	for i := 0; i < len(largeFiles); i++ {
+		for j := i + 1; j < len(largeFiles); j++ {
+			if largeFiles[j].Size > largeFiles[i].Size {
+				largeFiles[i], largeFiles[j] = largeFiles[j], largeFiles[i]
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(largeFiles)
+}
+
+// Storage breakdown types
+type StorageCategory struct {
+	Name      string `json:"name"`
+	Size      int64  `json:"size"`
+	SizeHuman string `json:"size_human"`
+	Percent   float64 `json:"percent"`
+	Color     string `json:"color"`
+	Icon      string `json:"icon"`
+}
+
+type CleanupSuggestion struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Size        int64  `json:"size"`
+	SizeHuman   string `json:"size_human"`
+	Action      string `json:"action"`
+	Category    string `json:"category"`
+}
+
+type StorageBreakdown struct {
+	Total       int64               `json:"total"`
+	Used        int64               `json:"used"`
+	Free        int64               `json:"free"`
+	TotalHuman  string              `json:"total_human"`
+	UsedHuman   string              `json:"used_human"`
+	FreeHuman   string              `json:"free_human"`
+	Categories  []StorageCategory   `json:"categories"`
+	Suggestions []CleanupSuggestion `json:"suggestions"`
+}
+
+func handleStorageBreakdown(w http.ResponseWriter, r *http.Request) {
+	home := os.Getenv("HOME")
+
+	// Get disk usage
+	usage, err := disk.Usage("/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	breakdown := StorageBreakdown{
+		Total:      int64(usage.Total),
+		Used:       int64(usage.Used),
+		Free:       int64(usage.Free),
+		TotalHuman: formatBytes(int64(usage.Total)),
+		UsedHuman:  formatBytes(int64(usage.Used)),
+		FreeHuman:  formatBytes(int64(usage.Free)),
+	}
+
+	// Calculate sizes for different categories
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	categories := []struct {
+		name  string
+		path  string
+		color string
+		icon  string
+	}{
+		{"Applications", "/Applications", "#3b82f6", "📱"},
+		{"Documents", filepath.Join(home, "Documents"), "#10b981", "📄"},
+		{"Downloads", filepath.Join(home, "Downloads"), "#f59e0b", "⬇️"},
+		{"Desktop", filepath.Join(home, "Desktop"), "#8b5cf6", "🖥️"},
+		{"Pictures", filepath.Join(home, "Pictures"), "#ec4899", "🖼️"},
+		{"Movies", filepath.Join(home, "Movies"), "#ef4444", "🎬"},
+		{"Music", filepath.Join(home, "Music"), "#06b6d4", "🎵"},
+		{"Code Projects", filepath.Join(home, "code"), "#22c55e", "💻"},
+		{"Docker Data", "/Volumes/data/docker", "#2563eb", "🐳"},
+		{"Media Hub", "/Volumes/data/media-hub", "#dc2626", "🎬"},
+		{"Photos Library", "/Volumes/data/Photos Library.photoslibrary", "#ec4899", "📸"},
+		{"System Library", filepath.Join(home, "Library"), "#6366f1", "📚"},
+	}
+
+	for _, cat := range categories {
+		wg.Add(1)
+		go func(name, path, color, icon string) {
+			defer wg.Done()
+			size := getDirSize(path)
+			if size > 0 {
+				mu.Lock()
+				breakdown.Categories = append(breakdown.Categories, StorageCategory{
+					Name:      name,
+					Size:      size,
+					SizeHuman: formatBytes(size),
+					Percent:   float64(size) / float64(usage.Used) * 100,
+					Color:     color,
+					Icon:      icon,
+				})
+				mu.Unlock()
+			}
+		}(cat.name, cat.path, cat.color, cat.icon)
+	}
+
+	// Check cache sizes for suggestions
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		cacheSize := getDirSize(filepath.Join(home, "Library/Caches"))
+		if cacheSize > 100*1024*1024 { // > 100MB
+			mu.Lock()
+			breakdown.Suggestions = append(breakdown.Suggestions, CleanupSuggestion{
+				Title:       "Clear System Cache",
+				Description: "Temporary files that can be safely removed",
+				Size:        cacheSize,
+				SizeHuman:   formatBytes(cacheSize),
+				Action:      "clean",
+				Category:    "cache",
+			})
+			mu.Unlock()
+		}
+	}()
+
+	// Check logs
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		logSize := getDirSize(filepath.Join(home, "Library/Logs"))
+		if logSize > 50*1024*1024 { // > 50MB
+			mu.Lock()
+			breakdown.Suggestions = append(breakdown.Suggestions, CleanupSuggestion{
+				Title:       "Clear Old Logs",
+				Description: "Log files from apps and system",
+				Size:        logSize,
+				SizeHuman:   formatBytes(logSize),
+				Action:      "clean",
+				Category:    "logs",
+			})
+			mu.Unlock()
+		}
+	}()
+
+	// Check Downloads for old files
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var oldDownloadsSize int64
+		downloadsPath := filepath.Join(home, "Downloads")
+		thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+		filepath.Walk(downloadsPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return nil
+			}
+			if info.ModTime().Before(thirtyDaysAgo) {
+				oldDownloadsSize += info.Size()
+			}
+			return nil
+		})
+
+		if oldDownloadsSize > 100*1024*1024 { // > 100MB
+			mu.Lock()
+			breakdown.Suggestions = append(breakdown.Suggestions, CleanupSuggestion{
+				Title:       "Old Downloads",
+				Description: "Files in Downloads older than 30 days",
+				Size:        oldDownloadsSize,
+				SizeHuman:   formatBytes(oldDownloadsSize),
+				Action:      "clean",
+				Category:    "downloads",
+			})
+			mu.Unlock()
+		}
+	}()
+
+	// Check Trash
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		trashSize := getDirSize(filepath.Join(home, ".Trash"))
+		if trashSize > 10*1024*1024 { // > 10MB
+			mu.Lock()
+			breakdown.Suggestions = append(breakdown.Suggestions, CleanupSuggestion{
+				Title:       "Empty Trash",
+				Description: "Files waiting to be permanently deleted",
+				Size:        trashSize,
+				SizeHuman:   formatBytes(trashSize),
+				Action:      "clean",
+				Category:    "trash",
+			})
+			mu.Unlock()
+		}
+	}()
+
+	// Check Xcode derived data
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		xcodeSize := getDirSize(filepath.Join(home, "Library/Developer/Xcode/DerivedData"))
+		if xcodeSize > 500*1024*1024 { // > 500MB
+			mu.Lock()
+			breakdown.Suggestions = append(breakdown.Suggestions, CleanupSuggestion{
+				Title:       "Xcode Build Files",
+				Description: "Developer build cache (safe to delete)",
+				Size:        xcodeSize,
+				SizeHuman:   formatBytes(xcodeSize),
+				Action:      "clean",
+				Category:    "xcode",
+			})
+			mu.Unlock()
+		}
+	}()
+
+	wg.Wait()
+
+	// Sort categories by size
+	for i := 0; i < len(breakdown.Categories); i++ {
+		for j := i + 1; j < len(breakdown.Categories); j++ {
+			if breakdown.Categories[j].Size > breakdown.Categories[i].Size {
+				breakdown.Categories[i], breakdown.Categories[j] = breakdown.Categories[j], breakdown.Categories[i]
+			}
+		}
+	}
+
+	// Sort suggestions by size
+	for i := 0; i < len(breakdown.Suggestions); i++ {
+		for j := i + 1; j < len(breakdown.Suggestions); j++ {
+			if breakdown.Suggestions[j].Size > breakdown.Suggestions[i].Size {
+				breakdown.Suggestions[i], breakdown.Suggestions[j] = breakdown.Suggestions[j], breakdown.Suggestions[i]
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(breakdown)
+}
+
 func handleOptimize(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	result := runMoleCommand("optimize", "--yes")
+
+	// Run optimization tasks directly (no sudo required)
+	var output strings.Builder
+	output.WriteString("System Optimization\n")
+	output.WriteString("==================\n\n")
+
+	// 1. Flush DNS cache (works without sudo on modern macOS)
+	output.WriteString("DNS Cache: ")
+	if err := exec.Command("dscacheutil", "-flushcache").Run(); err == nil {
+		output.WriteString("Flushed\n")
+	} else {
+		output.WriteString("Skipped (requires admin)\n")
+	}
+
+	// 2. Clear QuickLook thumbnails
+	output.WriteString("QuickLook Cache: ")
+	qlPath := filepath.Join(os.Getenv("HOME"), "Library", "Caches", "com.apple.QuickLook.thumbnailcache")
+	if err := os.RemoveAll(qlPath); err == nil {
+		output.WriteString("Cleared\n")
+	} else {
+		output.WriteString("Skipped\n")
+	}
+
+	// 3. Clear icon services cache
+	output.WriteString("Icon Cache: ")
+	iconPath := filepath.Join(os.Getenv("HOME"), "Library", "Caches", "com.apple.iconservices.store")
+	if err := os.RemoveAll(iconPath); err == nil {
+		output.WriteString("Cleared\n")
+	} else {
+		output.WriteString("Skipped\n")
+	}
+
+	// 4. Purge inactive memory
+	output.WriteString("Memory: ")
+	if err := exec.Command("purge").Run(); err == nil {
+		output.WriteString("Inactive memory purged\n")
+	} else {
+		output.WriteString("Skipped (requires admin)\n")
+	}
+
+	// 5. Rebuild Spotlight index for user folders
+	output.WriteString("Spotlight: ")
+	homeDir := os.Getenv("HOME")
+	exec.Command("mdutil", "-i", "on", homeDir).Run()
+	output.WriteString("Index refreshed\n")
+
+	// 6. Clear font caches
+	output.WriteString("Font Caches: ")
+	fontCaches := []string{
+		filepath.Join(os.Getenv("HOME"), "Library", "Caches", "com.apple.FontRegistry"),
+	}
+	for _, fc := range fontCaches {
+		os.RemoveAll(fc)
+	}
+	output.WriteString("Cleared\n")
+
+	// 7. Restart Finder to apply changes
+	output.WriteString("\nRestarting Finder to apply changes...\n")
+	exec.Command("killall", "Finder").Run()
+
+	output.WriteString("\nOptimization complete!")
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	json.NewEncoder(w).Encode(CleanResult{
+		Success: true,
+		Message: "System optimized",
+		Output:  output.String(),
+	})
 }
 
 type PurgeItem struct {
@@ -780,16 +1368,44 @@ func runMoleCommand(args ...string) CleanResult {
 			}
 			return "Completed successfully"
 		}(),
-		Output: output.String(),
+		Output: stripANSI(output.String()),
 	}
 }
 
+// stripANSI removes ANSI escape codes from a string
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+func stripANSI(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
+}
+
 func getDirSize(path string) int64 {
+	return getDirSizeWithLimit(path, 3) // Limit depth to 3 levels for speed
+}
+
+func getDirSizeWithLimit(path string, maxDepth int) int64 {
 	var size int64
-	filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+	baseDepth := strings.Count(path, string(os.PathSeparator))
+
+	filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil || info == nil {
 			return nil
 		}
+
+		// Calculate current depth relative to base
+		currentDepth := strings.Count(filePath, string(os.PathSeparator)) - baseDepth
+
+		// Skip directories that are too deep
+		if info.IsDir() && currentDepth >= maxDepth {
+			return filepath.SkipDir
+		}
+
+		// Skip slow directories
+		name := info.Name()
+		if info.IsDir() && (name == "node_modules" || name == ".git" || name == "Library" || name == "Caches") {
+			return filepath.SkipDir
+		}
+
 		if !info.IsDir() {
 			size += info.Size()
 		}

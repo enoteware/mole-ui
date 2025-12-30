@@ -5,12 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mole - System Cleaner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
                     colors: {
                         mole: {
                             50: '#faf5f0',
@@ -31,590 +38,911 @@
     </script>
     <style>
         @keyframes pulse-slow {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-
-        .animate-pulse-slow {
-            animation: pulse-slow 2s ease-in-out infinite;
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 8px rgba(188, 138, 92, 0.3); }
+            50% { box-shadow: 0 0 16px rgba(188, 138, 92, 0.5); }
+        }
+        .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
 
         .glass {
+            backdrop-filter: blur(16px);
+            background: rgba(24, 24, 27, 0.85);
+        }
+        .glass-light {
             backdrop-filter: blur(12px);
-            background: rgba(30, 30, 30, 0.8);
+            background: rgba(39, 39, 42, 0.6);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(113, 113, 122, 0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(113, 113, 122, 0.6); }
+
+        /* Noise texture overlay */
+        .noise::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 0;
         }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 min-h-screen text-zinc-100">
-    <div id="app" class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header -->
-        <header class="flex items-center justify-between mb-8">
-            <div class="flex items-center gap-4">
-                <div class="text-4xl">🐭</div>
-                <div>
-                    <h1
-                        class="text-3xl font-bold bg-gradient-to-r from-mole-400 to-mole-300 bg-clip-text text-transparent">
-                        Mole</h1>
-                    <p class="text-zinc-400 text-sm">System Cleaner & Optimizer</p>
+<body class="bg-zinc-950 min-h-screen text-zinc-100 font-sans noise relative overflow-x-hidden">
+    <!-- Ambient background gradient -->
+    <div class="fixed inset-0 bg-gradient-to-br from-mole-900/20 via-zinc-950 to-zinc-900 pointer-events-none"></div>
+    <div class="fixed top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-mole-500/5 to-transparent pointer-events-none blur-3xl"></div>
+
+    <div id="app" class="relative z-10 min-h-screen">
+        <!-- Unified Header with Navigation -->
+        <header class="sticky top-0 z-40 glass border-b border-zinc-800/50">
+            <div class="container mx-auto px-4 lg:px-6 max-w-[1600px]">
+                <div class="flex items-center justify-between h-16 gap-4">
+                    <!-- Left: Logo and App Name -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-mole-400 to-mole-600 flex items-center justify-center text-xl shadow-lg shadow-mole-500/20">
+                            🐭
+                        </div>
+                        <div class="hidden sm:block">
+                            <h1 class="text-xl font-bold bg-gradient-to-r from-mole-300 to-mole-500 bg-clip-text text-transparent leading-tight">
+                                Mole
+                            </h1>
+                            <p class="text-[10px] text-zinc-500 font-medium tracking-wider uppercase">System Cleaner</p>
+                        </div>
+                    </div>
+
+                    <!-- Center: Navigation Tabs -->
+                    <nav class="flex items-center gap-1 overflow-x-auto scrollbar-hide px-2 py-1">
+                        <button onclick="showTab('status')" class="tab-btn active" data-tab="status">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="hidden md:inline">Status</span>
+                            <span class="tab-badge" data-tab-status="status"></span>
+                        </button>
+                        <button onclick="showTab('clean')" class="tab-btn" data-tab="clean">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span class="hidden md:inline">Clean</span>
+                            <span class="tab-badge" data-tab-status="clean"></span>
+                        </button>
+                        <button onclick="showTab('uninstall')" class="tab-btn" data-tab="uninstall">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span class="hidden md:inline">Uninstall</span>
+                            <span class="tab-badge" data-tab-status="uninstall"></span>
+                        </button>
+                        <button onclick="showTab('analyze')" class="tab-btn" data-tab="analyze">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                            </svg>
+                            <span class="hidden md:inline">Analyze</span>
+                            <span class="tab-badge" data-tab-status="analyze"></span>
+                        </button>
+                        <button onclick="showTab('optimize')" class="tab-btn" data-tab="optimize">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            <span class="hidden md:inline">Optimize</span>
+                            <span class="tab-badge" data-tab-status="optimize"></span>
+                        </button>
+                        <button onclick="showTab('purge')" class="tab-btn" data-tab="purge">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="hidden md:inline">Purge</span>
+                            <span class="tab-badge" data-tab-status="purge"></span>
+                        </button>
+                    </nav>
+
+                    <!-- Right: Connection Status -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                            <span id="hostname" class="text-xs text-zinc-400 font-mono">-</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" id="connection-indicator" title="Connected"></span>
+                            <span id="latency" class="text-xs text-zinc-500 font-mono">-</span>
+                        </div>
+                        <!-- Mobile stats toggle -->
+                        <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 hover:bg-zinc-700/50 transition-colors">
+                            <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-2 text-sm text-zinc-500">
-                <span id="hostname">-</span>
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" id="connection-indicator" title="Connected"></span>
-                <span id="latency" class="text-xs text-zinc-600">-</span>
             </div>
         </header>
 
-        <!-- Navigation Tabs -->
-        <nav class="flex gap-2 mb-8 overflow-x-auto pb-2">
-            <button onclick="showTab('status')" class="tab-btn active" data-tab="status">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                    </path>
-                </svg>
-                Status
-            </button>
-            <button onclick="showTab('clean')" class="tab-btn" data-tab="clean">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                    </path>
-                </svg>
-                Clean
-            </button>
-            <button onclick="showTab('uninstall')" class="tab-btn" data-tab="uninstall">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-                Uninstall
-            </button>
-            <button onclick="showTab('analyze')" class="tab-btn" data-tab="analyze">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4">
-                    </path>
-                </svg>
-                Analyze
-            </button>
-            <button onclick="showTab('optimize')" class="tab-btn" data-tab="optimize">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                Optimize
-            </button>
-            <button onclick="showTab('purge')" class="tab-btn" data-tab="purge">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                </svg>
-                Purge
-            </button>
-            <button onclick="showTab('install')" class="tab-btn" data-tab="install">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Install
-            </button>
-        </nav>
-
-        <!-- Tab Contents -->
-        <main>
-            <!-- Status Tab -->
-            <section id="tab-status" class="tab-content">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                    <!-- CPU Card -->
-                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-sm font-medium">CPU</span>
-                            <span id="cpu-usage" class="text-xl font-bold text-mole-400">--%</span>
+        <!-- Main Layout -->
+        <div class="container mx-auto px-4 lg:px-6 py-6 max-w-[1600px]">
+            <div class="flex gap-6">
+                <!-- Main Content Area -->
+                <main class="flex-1 min-w-0">
+                    <!-- Status Tab -->
+                    <section id="tab-status" class="tab-content">
+                        <!-- Tab Header -->
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Your Mac at a Glance</h2>
+                            <p class="text-sm text-zinc-500">Health report and storage breakdown</p>
                         </div>
-                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
-                            <div id="cpu-bar"
-                                class="bg-gradient-to-r from-mole-500 to-mole-400 h-2 rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                        <p id="cpu-model" class="text-xs text-zinc-500 mt-2 truncate">-</p>
-                    </div>
 
-                    <!-- Memory Card -->
-                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-sm font-medium">Memory</span>
-                            <div class="text-right">
-                                <div id="mem-usage" class="text-lg font-bold text-blue-400">-- / --</div>
-                                <div id="mem-percent" class="text-xs text-zinc-500">--%</div>
+                        <!-- Health Summary Card -->
+                        <div id="health-card" class="glass rounded-2xl p-6 border border-zinc-800/50 mb-4">
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div id="health-icon" class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-3xl">
+                                        ✓
+                                    </div>
+                                    <div>
+                                        <h3 id="health-title" class="text-xl font-semibold text-zinc-200">Checking your Mac...</h3>
+                                        <p id="health-subtitle" class="text-sm text-zinc-500">Analyzing system health</p>
+                                    </div>
+                                </div>
+                                <button onclick="loadStorageBreakdown()" class="px-3 py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors border border-zinc-700">
+                                    Refresh
+                                </button>
                             </div>
-                        </div>
-                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
-                            <div id="mem-bar"
-                                class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                        <p id="mem-detail" class="text-xs text-zinc-500 mt-2">-</p>
-                    </div>
 
-                    <!-- Disk Card -->
-                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-sm font-medium">Disk</span>
-                            <div class="text-right">
-                                <div id="disk-usage" class="text-lg font-bold text-emerald-400">-- / --</div>
-                                <div id="disk-percent" class="text-xs text-zinc-500">--%</div>
-                            </div>
-                        </div>
-                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
-                            <div id="disk-bar"
-                                class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                        <p id="disk-detail" class="text-xs text-zinc-500 mt-2">-</p>
-                    </div>
-
-                    <!-- Network Card -->
-                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-sm font-medium">Network</span>
-                            <span class="text-xl font-bold text-purple-400">↑↓</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <div>
-                                <span class="text-zinc-500">↑</span>
-                                <span id="net-sent" class="text-zinc-300">-</span>
-                            </div>
-                            <div>
-                                <span class="text-zinc-500">↓</span>
-                                <span id="net-recv" class="text-zinc-300">-</span>
-                            </div>
-                        </div>
-                        <p id="uptime" class="text-xs text-zinc-500 mt-2">Uptime: -</p>
-                    </div>
-                </div>
-
-                <!-- System Info -->
-                <div class="glass rounded-2xl p-5 border border-zinc-700/50">
-                    <h3 class="text-lg font-semibold mb-4 text-zinc-200">System Information</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <span class="text-zinc-500">OS</span>
-                            <p id="os-info" class="text-zinc-300">-</p>
-                        </div>
-                        <div>
-                            <span class="text-zinc-500">CPU Cores</span>
-                            <p id="cpu-cores" class="text-zinc-300">-</p>
-                        </div>
-                        <div>
-                            <span class="text-zinc-500">Total RAM</span>
-                            <p id="total-ram" class="text-zinc-300">-</p>
-                        </div>
-                        <div>
-                            <span class="text-zinc-500">Total Disk</span>
-                            <p id="total-disk" class="text-zinc-300">-</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Clean Tab -->
-            <section id="tab-clean" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <h3 class="text-xl font-semibold mb-4">System Cleanup</h3>
-                    <p class="text-zinc-400 mb-6">Remove cache files, logs, browser data, and other temporary files to
-                        free up disk space.</p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" checked
-                                class="clean-category rounded text-mole-500 focus:ring-mole-500" value="cache">
-                            <div>
-                                <span class="font-medium">System Cache</span>
-                                <p class="text-xs text-zinc-500">System and user caches</p>
-                            </div>
-                        </label>
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" checked
-                                class="clean-category rounded text-mole-500 focus:ring-mole-500" value="logs">
-                            <div>
-                                <span class="font-medium">Logs</span>
-                                <p class="text-xs text-zinc-500">System and app logs</p>
-                            </div>
-                        </label>
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
-                                value="browser">
-                            <div>
-                                <span class="font-medium">Browser Data</span>
-                                <p class="text-xs text-zinc-500">Cache, cookies, history</p>
-                            </div>
-                        </label>
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
-                                value="downloads">
-                            <div>
-                                <span class="font-medium">Downloads</span>
-                                <p class="text-xs text-zinc-500">Old downloaded files</p>
-                            </div>
-                        </label>
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
-                                value="trash">
-                            <div>
-                                <span class="font-medium">Trash</span>
-                                <p class="text-xs text-zinc-500">Empty trash bins</p>
-                            </div>
-                        </label>
-                        <label
-                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
-                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
-                                value="xcode">
-                            <div>
-                                <span class="font-medium">Xcode</span>
-                                <p class="text-xs text-zinc-500">Derived data & archives</p>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="flex gap-4">
-                        <button onclick="runClean()"
-                            class="px-6 py-3 bg-gradient-to-r from-mole-600 to-mole-500 hover:from-mole-500 hover:to-mole-400 rounded-xl font-medium transition-all transform hover:scale-105">
-                            🧹 Clean Now
-                        </button>
-                        <button onclick="previewClean()"
-                            class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl font-medium transition-colors">
-                            Preview
-                        </button>
-                    </div>
-
-                    <div id="clean-result" class="mt-6 hidden">
-                        <pre
-                            class="bg-zinc-900 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300"></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Uninstall Tab -->
-            <section id="tab-uninstall" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold">App Uninstaller</h3>
-                        <button onclick="loadApps()" class="text-sm text-mole-400 hover:text-mole-300">↻
-                            Refresh</button>
-                    </div>
-                    <p class="text-zinc-400 mb-6">Remove applications and their associated files completely.</p>
-
-                    <div class="mb-4">
-                        <input type="text" id="app-search" placeholder="Search apps..."
-                            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none"
-                            oninput="filterApps()">
-                    </div>
-
-                    <div id="apps-list" class="space-y-2 max-h-96 overflow-y-auto mb-4">
-                        <div class="text-zinc-500 text-center py-8">Loading applications...</div>
-                    </div>
-
-                    <button onclick="uninstallSelected()"
-                        class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-medium transition-colors disabled:opacity-50"
-                        id="uninstall-btn" disabled>
-                        🗑️ Uninstall Selected
-                    </button>
-                </div>
-            </section>
-
-            <!-- Analyze Tab -->
-            <section id="tab-analyze" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <h3 class="text-xl font-semibold mb-4">Disk Analyzer</h3>
-                    <p class="text-zinc-400 mb-6">Explore disk usage and find large files/folders.</p>
-
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="analyze-path" value="" placeholder="Path to analyze"
-                            class="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none">
-                        <button onclick="analyzeDisk()"
-                            class="px-6 py-2 bg-mole-600 hover:bg-mole-500 rounded-xl font-medium transition-colors">
-                            Scan
-                        </button>
-                    </div>
-
-                    <div id="breadcrumb" class="flex items-center gap-2 text-sm mb-4 flex-wrap"></div>
-
-                    <div id="analyze-result" class="space-y-1 max-h-[500px] overflow-y-auto">
-                        <div class="text-zinc-500 text-center py-8">Enter a path and click Scan to analyze</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Optimize Tab -->
-            <section id="tab-optimize" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <h3 class="text-xl font-semibold mb-4">System Optimization</h3>
-                    <p class="text-zinc-400 mb-6">Rebuild system caches, refresh services, and optimize performance.</p>
-
-                    <div class="space-y-4 mb-6">
-                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                            <div class="text-2xl">⚡</div>
-                            <div>
-                                <h4 class="font-medium">Rebuild Caches</h4>
-                                <p class="text-sm text-zinc-500">Rebuild system caches for better performance</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                            <div class="text-2xl">🔄</div>
-                            <div>
-                                <h4 class="font-medium">Refresh Services</h4>
-                                <p class="text-sm text-zinc-500">Restart system services to free resources</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                            <div class="text-2xl">🧹</div>
-                            <div>
-                                <h4 class="font-medium">Clear Temporary Files</h4>
-                                <p class="text-sm text-zinc-500">Remove temporary system files</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onclick="runOptimize()"
-                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl font-medium transition-all transform hover:scale-105">
-                        ⚡ Optimize Now
-                    </button>
-
-                    <div id="optimize-result" class="mt-6 hidden">
-                        <pre
-                            class="bg-zinc-900 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300"></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Purge Tab -->
-            <section id="tab-purge" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <h3 class="text-xl font-semibold mb-4">Project Artifact Purge</h3>
-                    <p class="text-zinc-400 mb-6">Find and remove old node_modules, build folders, and other development
-                        artifacts.</p>
-
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="purge-path" value="" placeholder="Path to scan"
-                            class="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none">
-                        <button onclick="scanPurge()"
-                            class="px-6 py-2 bg-mole-600 hover:bg-mole-500 rounded-xl font-medium transition-colors">
-                            Scan
-                        </button>
-                    </div>
-
-                    <div id="purge-list" class="space-y-2 max-h-96 overflow-y-auto mb-4">
-                        <div class="text-zinc-500 text-center py-8">Enter a path and click Scan to find artifacts</div>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <span id="purge-total" class="text-zinc-400">Select items to purge</span>
-                        <button onclick="purgeSelected()"
-                            class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-medium transition-colors disabled:opacity-50"
-                            id="purge-btn" disabled>
-                            🗑️ Purge Selected
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Install Tab -->
-            <section id="tab-install" class="tab-content hidden">
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50 mb-6">
-                    <h3 class="text-xl font-semibold mb-4">📦 Install Mole on Another Mac</h3>
-                    <p class="text-zinc-400 mb-6">Use this installer to quickly set up Mole Web UI on other Macs on your network.</p>
-
-                    <div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 mb-6">
-                        <h4 class="text-lg font-semibold mb-3 text-mole-400">One-Line Installer</h4>
-                        <p class="text-zinc-400 text-sm mb-4">Run one of these commands on any Mac to install and start Mole:</p>
-
-                        <div class="space-y-4">
-                            <!-- Hostname version -->
-                            <div>
-                                <p class="text-xs text-zinc-500 mb-2">Using .local hostname (Bonjour):</p>
-                                <div class="relative">
-                                    <pre class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 overflow-x-auto text-sm"><code id="install-command-hostname">curl -fsSL http://<span id="server-hostname">-</span>:8081/install.sh | bash</code></pre>
-                                    <button onclick="copyInstallCommand('hostname')"
-                                        class="absolute top-2 right-2 px-3 py-1 bg-mole-600 hover:bg-mole-500 rounded text-xs transition-colors">
-                                        📋 Copy
-                                    </button>
+                            <!-- Health Indicators -->
+                            <div id="health-indicators" class="grid grid-cols-3 gap-3 mb-4">
+                                <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs text-zinc-500">CPU</span>
+                                        <span id="health-cpu-status" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Good</span>
+                                    </div>
+                                    <p id="health-cpu-value" class="text-lg font-semibold text-zinc-200">--%</p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs text-zinc-500">Memory</span>
+                                        <span id="health-mem-status" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Good</span>
+                                    </div>
+                                    <p id="health-mem-value" class="text-lg font-semibold text-zinc-200">--%</p>
+                                </div>
+                                <div class="p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs text-zinc-500">Storage</span>
+                                        <span id="health-disk-status" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">Good</span>
+                                    </div>
+                                    <p id="health-disk-value" class="text-lg font-semibold text-zinc-200">--%</p>
                                 </div>
                             </div>
 
-                            <!-- IP version -->
-                            <div>
-                                <p class="text-xs text-zinc-500 mb-2">Using IP address (most reliable):</p>
-                                <div class="relative">
-                                    <pre class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 overflow-x-auto text-sm"><code id="install-command-ip">curl -fsSL http://<span id="server-ip">-</span>:8081/install.sh | bash</code></pre>
-                                    <button onclick="copyInstallCommand('ip')"
-                                        class="absolute top-2 right-2 px-3 py-1 bg-mole-600 hover:bg-mole-500 rounded text-xs transition-colors">
-                                        📋 Copy
+                            <!-- Recommendations -->
+                            <div id="health-recommendations" class="hidden">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-sm font-medium text-zinc-400">💡 Recommendations</span>
+                                </div>
+                                <div id="recommendations-list" class="space-y-2">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Storage Breakdown -->
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50 mb-4">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-lg font-semibold text-zinc-200 flex items-center gap-2">
+                                    <span class="text-xl">💾</span>
+                                    Storage Breakdown
+                                </h3>
+                                <div class="text-right">
+                                    <p id="storage-used" class="text-sm font-semibold text-zinc-200">-- used</p>
+                                    <p id="storage-free" class="text-xs text-zinc-500">-- available</p>
+                                </div>
+                            </div>
+
+                            <!-- Visual Bar -->
+                            <div class="mb-5">
+                                <div id="storage-bar" class="w-full h-6 rounded-lg bg-zinc-800 overflow-hidden flex">
+                                    <!-- Segments populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Category Legend -->
+                            <div id="storage-categories" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                <!-- Populated by JS -->
+                                <div class="text-zinc-500 text-sm py-4 col-span-full text-center">Loading storage breakdown...</div>
+                            </div>
+                        </div>
+
+                        <!-- Cleanup Suggestions -->
+                        <div id="cleanup-suggestions-card" class="glass rounded-2xl p-6 border border-zinc-800/50 mb-4 hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-zinc-200 flex items-center gap-2">
+                                    <span class="text-xl">🧹</span>
+                                    Quick Cleanup
+                                </h3>
+                                <span id="cleanup-total-size" class="text-sm font-semibold text-mole-400">-- available to free</span>
+                            </div>
+                            <p class="text-sm text-zinc-500 mb-4">Based on your storage, here's what you can clean up:</p>
+                            <div id="cleanup-suggestions-list" class="space-y-2">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- System Info Card -->
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="text-lg font-semibold mb-5 text-zinc-200 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-mole-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                About This Mac
+                            </h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div class="space-y-1">
+                                    <span class="text-xs text-zinc-500 font-medium">macOS Version</span>
+                                    <p id="os-info" class="text-zinc-200 font-medium">-</p>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-xs text-zinc-500 font-medium">Processor</span>
+                                    <p id="cpu-cores" class="text-zinc-200 font-medium">-</p>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-xs text-zinc-500 font-medium">Memory (RAM)</span>
+                                    <p id="total-ram" class="text-zinc-200 font-medium">-</p>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-xs text-zinc-500 font-medium">Storage</span>
+                                    <p id="total-disk" class="text-zinc-200 font-medium">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Clean Tab -->
+                    <section id="tab-clean" class="tab-content hidden">
+                        <!-- Tab Header -->
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Free Up Space</h2>
+                            <p class="text-sm text-zinc-500">Remove junk files that accumulate over time to get back disk space</p>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div id="clean-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-mole-500/30 animate-glow">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-mole-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="clean-progress-text" class="text-sm font-medium text-zinc-200">Cleaning...</p>
+                                        <p id="clean-progress-detail" class="text-xs text-zinc-500">This may take a moment</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                    <div id="clean-progress-bar" class="bg-gradient-to-r from-mole-500 to-mole-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <!-- Safe to clean section -->
+                            <div class="mb-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                    <span class="text-sm font-medium text-zinc-400">Safe to clean</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-emerald-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" checked class="clean-category w-5 h-5 rounded-lg text-emerald-500 bg-zinc-700 border-zinc-600 focus:ring-emerald-500 focus:ring-offset-0" value="cache">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-emerald-300 transition-colors">Temporary Files</span>
+                                            <p class="text-xs text-zinc-500">Files your Mac creates while running apps. Safe to delete.</p>
+                                        </div>
+                                    </label>
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-emerald-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" checked class="clean-category w-5 h-5 rounded-lg text-emerald-500 bg-zinc-700 border-zinc-600 focus:ring-emerald-500 focus:ring-offset-0" value="logs">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-emerald-300 transition-colors">Old Logs</span>
+                                            <p class="text-xs text-zinc-500">Records of past activity. You don't need these.</p>
+                                        </div>
+                                    </label>
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-emerald-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" checked class="clean-category w-5 h-5 rounded-lg text-emerald-500 bg-zinc-700 border-zinc-600 focus:ring-emerald-500 focus:ring-offset-0" value="trash">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-emerald-300 transition-colors">Empty Trash</span>
+                                            <p class="text-xs text-zinc-500">Permanently delete items in your Trash.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Use caution section -->
+                            <div class="mb-6">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                                    <span class="text-sm font-medium text-zinc-400">Review before cleaning</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-amber-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" class="clean-category w-5 h-5 rounded-lg text-amber-500 bg-zinc-700 border-zinc-600 focus:ring-amber-500 focus:ring-offset-0" value="browser">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-amber-300 transition-colors">Browser Cache</span>
+                                            <p class="text-xs text-zinc-500">May log you out of websites. Frees significant space.</p>
+                                        </div>
+                                    </label>
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-amber-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" class="clean-category w-5 h-5 rounded-lg text-amber-500 bg-zinc-700 border-zinc-600 focus:ring-amber-500 focus:ring-offset-0" value="downloads">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-amber-300 transition-colors">Old Downloads</span>
+                                            <p class="text-xs text-zinc-500">Files older than 30 days in your Downloads folder.</p>
+                                        </div>
+                                    </label>
+                                    <label class="group flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-amber-500/50 hover:bg-zinc-800/50 transition-all">
+                                        <input type="checkbox" class="clean-category w-5 h-5 rounded-lg text-amber-500 bg-zinc-700 border-zinc-600 focus:ring-amber-500 focus:ring-offset-0" value="xcode">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-zinc-200 group-hover:text-amber-300 transition-colors">Developer Files</span>
+                                            <p class="text-xs text-zinc-500">Xcode build files. Only if you're a developer.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <button onclick="runClean()" class="px-6 py-3 bg-gradient-to-r from-mole-600 to-mole-500 hover:from-mole-500 hover:to-mole-400 rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-mole-500/20">
+                                    Clean Selected
+                                </button>
+                                <button onclick="previewClean()" class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition-colors border border-zinc-700">
+                                    Preview First
+                                </button>
+                                <span class="text-xs text-zinc-500">Preview shows what will be deleted without removing anything</span>
+                            </div>
+
+                            <div id="clean-result" class="mt-6 hidden animate-slide-up">
+                                <pre class="bg-zinc-900/80 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300 font-mono border border-zinc-800"></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Uninstall Tab -->
+                    <section id="tab-uninstall" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Remove Apps</h2>
+                            <p class="text-sm text-zinc-500">Completely uninstall apps you no longer use — removes the app and all its leftover files</p>
+                        </div>
+
+                        <!-- Tip -->
+                        <div class="glass rounded-xl p-4 border border-zinc-800/50 mb-4">
+                            <div class="flex items-start gap-3">
+                                <span class="text-lg">💡</span>
+                                <div class="text-sm text-zinc-400">
+                                    <strong class="text-zinc-300">Tip:</strong> Dragging apps to Trash often leaves behind settings and cache files.
+                                    This tool removes everything, freeing up more space.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div id="uninstall-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-red-500/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="uninstall-progress-text" class="text-sm font-medium text-zinc-200">Removing app...</p>
+                                        <p id="uninstall-progress-detail" class="text-xs text-zinc-500">Cleaning up all related files</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex-1 mr-4">
+                                    <input type="text" id="app-search" placeholder="Search your apps..."
+                                        class="w-full px-4 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none text-sm placeholder:text-zinc-500"
+                                        oninput="filterApps()">
+                                </div>
+                                <button onclick="loadApps()" class="px-4 py-2.5 text-sm text-mole-400 hover:text-mole-300 hover:bg-zinc-800 rounded-xl transition-colors font-medium">
+                                    Refresh List
+                                </button>
+                            </div>
+
+                            <div id="apps-list" class="space-y-2 max-h-[400px] overflow-y-auto mb-4 pr-2">
+                                <div class="text-zinc-500 text-center py-12">Loading your apps...</div>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <button onclick="uninstallSelected()"
+                                    class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600"
+                                    id="uninstall-btn" disabled>
+                                    Remove Selected Apps
+                                </button>
+                                <span class="text-xs text-zinc-500">Select apps above, then click to remove them</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Analyze Tab -->
+                    <section id="tab-analyze" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Find What's Using Space</h2>
+                            <p class="text-sm text-zinc-500">See which folders and files are taking up the most space on your Mac</p>
+                        </div>
+
+                        <!-- Volume Selector -->
+                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl">
+                                    💾
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-zinc-200">Select Drive to Analyze</h3>
+                                    <p class="text-xs text-zinc-500">Choose which volume to scan for space usage</p>
+                                </div>
+                            </div>
+                            <div id="volumes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Volumes will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <!-- Large Files Finder -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center text-xl">
+                                        📦
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-zinc-200">Find Large Files</h3>
+                                        <p class="text-xs text-zinc-500">Quickly find the biggest files on your Mac</p>
+                                    </div>
+                                </div>
+                                <button onclick="findLargeFiles()" class="w-full px-4 py-2.5 bg-gradient-to-r from-red-600/80 to-orange-600/80 hover:from-red-500 hover:to-orange-500 rounded-xl font-medium transition-all text-sm">
+                                    Find Files Over 100MB
+                                </button>
+                            </div>
+
+                            <!-- Quick Scan Locations -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-xl">
+                                        📂
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-zinc-200">Quick Scan</h3>
+                                        <p class="text-xs text-zinc-500">Check common locations</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="analyzeDisk(getUserHome())" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors border border-zinc-700">
+                                        Home Folder
+                                    </button>
+                                    <button onclick="analyzeDisk(getUserHome() + '/Downloads')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors border border-zinc-700">
+                                        Downloads
+                                    </button>
+                                    <button onclick="analyzeDisk(getUserHome() + '/Desktop')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors border border-zinc-700">
+                                        Desktop
+                                    </button>
+                                    <button onclick="analyzeDisk(getUserHome() + '/Documents')" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors border border-zinc-700">
+                                        Documents
                                     </button>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Large Files Results -->
+                        <div id="large-files-section" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-2xl p-5 border border-red-500/30">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-zinc-200 flex items-center gap-2">
+                                        <span class="text-lg">📦</span>
+                                        Large Files Found
+                                    </h3>
+                                    <button onclick="hideLargeFiles()" class="text-xs text-zinc-500 hover:text-zinc-300">Hide</button>
+                                </div>
+                                <div id="large-files-list" class="space-y-2 max-h-[300px] overflow-y-auto">
+                                    <div class="text-zinc-500 text-center py-4">Scanning...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div id="analyze-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-emerald-500/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="analyze-progress-text" class="text-sm font-medium text-zinc-200">Scanning folders...</p>
+                                        <p id="analyze-progress-detail" class="text-xs text-zinc-500">This may take a moment for large folders</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Browse Section -->
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <h3 class="font-semibold text-zinc-300 mb-4">Browse Folders</h3>
+                            <div class="flex gap-3 mb-4">
+                                <input type="text" id="analyze-path" value="" placeholder="Enter any folder path to explore..."
+                                    class="flex-1 px-4 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none text-sm font-mono placeholder:text-zinc-500">
+                                <button onclick="analyzeDisk()"
+                                    class="px-6 py-2.5 bg-mole-600 hover:bg-mole-500 rounded-xl font-semibold transition-colors">
+                                    Scan
+                                </button>
+                            </div>
+
+                            <div id="breadcrumb" class="flex items-center gap-1 text-sm mb-4 flex-wrap font-mono"></div>
+
+                            <div id="analyze-result" class="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+                                <div class="text-zinc-500 text-center py-8">
+                                    <p class="mb-2">Use Quick Scan above or enter a path to get started</p>
+                                    <p class="text-xs">Click on folders to see what's inside them</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Optimize Tab -->
+                    <section id="tab-optimize" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Speed Up Your Mac</h2>
+                            <p class="text-sm text-zinc-500">Run maintenance tasks to help your Mac run faster and smoother</p>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div id="optimize-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-blue-500/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="optimize-progress-text" class="text-sm font-medium text-zinc-200">Optimizing your Mac...</p>
+                                        <p id="optimize-progress-detail" class="text-xs text-zinc-500">This may take a minute</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <p class="text-sm text-zinc-400 mb-5">This will perform the following maintenance tasks:</p>
+
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center text-xl">
+                                        ⚡
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-zinc-200">Refresh System Data</h4>
+                                        <p class="text-sm text-zinc-500">Like restarting your Mac, but without the restart. Clears out stale data.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-xl">
+                                        🔄
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-zinc-200">Free Up Memory</h4>
+                                        <p class="text-sm text-zinc-500">Release memory that apps are holding onto but not using.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl">
+                                        🧹
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-zinc-200">Run Maintenance Scripts</h4>
+                                        <p class="text-sm text-zinc-500">Run the same cleanup tasks macOS does automatically (but faster).</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-4">
+                                <button onclick="runOptimize()"
+                                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20">
+                                    Run Optimization
+                                </button>
+                                <span class="text-xs text-zinc-500">Safe to run anytime. No files will be deleted.</span>
+                            </div>
+
+                            <div id="optimize-result" class="mt-6 hidden animate-slide-up">
+                                <pre class="bg-zinc-900/80 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300 font-mono border border-zinc-800"></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Purge Tab -->
+                    <section id="tab-purge" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Developer Cleanup</h2>
+                            <p class="text-sm text-zinc-500">Remove old project files that developers don't need to keep</p>
+                        </div>
+
+                        <!-- Explanation for non-developers -->
+                        <div class="glass rounded-xl p-4 border border-zinc-800/50 mb-4">
+                            <div class="flex items-start gap-3">
+                                <span class="text-lg">👨‍💻</span>
+                                <div class="text-sm text-zinc-400">
+                                    <strong class="text-zinc-300">For developers:</strong> This finds <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">node_modules</code>,
+                                    <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">build</code>, <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">.cache</code>,
+                                    and other project folders that can be safely deleted (they'll be recreated when you run your projects again).
+                                    <span class="text-zinc-500 block mt-1">If you're not a developer, you can skip this section.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div id="purge-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-mole-500/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-mole-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="purge-progress-text" class="text-sm font-medium text-zinc-200">Scanning for project files...</p>
+                                        <p id="purge-progress-detail" class="text-xs text-zinc-500">This may take a while for large folders</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                            <div class="flex gap-3 mb-4">
+                                <input type="text" id="purge-path" value="" placeholder="Enter folder to scan (e.g., ~/Projects)..."
+                                    class="flex-1 px-4 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none text-sm font-mono placeholder:text-zinc-500">
+                                <button onclick="scanPurge()"
+                                    class="px-6 py-2.5 bg-mole-600 hover:bg-mole-500 rounded-xl font-semibold transition-colors">
+                                    Find Files
+                                </button>
+                            </div>
+
+                            <div id="purge-list" class="space-y-2 max-h-[400px] overflow-y-auto mb-4 pr-2">
+                                <div class="text-zinc-500 text-center py-8">
+                                    <p class="mb-2">Enter a folder path and click "Find Files" to scan</p>
+                                    <p class="text-xs">Try scanning your code projects folder</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-800">
+                                <span id="purge-total" class="text-sm text-zinc-400">Select items to delete</span>
+                                <button onclick="purgeSelected()"
+                                    class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600"
+                                    id="purge-btn" disabled>
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <!-- Right Sidebar - Persistent Stats -->
+                <aside id="stats-sidebar" class="hidden lg:block w-72 flex-shrink-0">
+                    <div class="sticky top-24 space-y-4">
+                        <!-- CPU Card -->
+                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 hover:border-mole-500/30 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-mole-500/20 to-mole-600/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-mole-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">CPU</span>
+                                </div>
+                                <span id="cpu-usage" class="text-2xl font-bold text-mole-400 tabular-nums">--%</span>
+                            </div>
+                            <div class="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                                <div id="cpu-bar" class="bg-gradient-to-r from-mole-500 to-mole-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <p id="cpu-model" class="text-xs text-zinc-500 mt-3 truncate">-</p>
+                        </div>
+
+                        <!-- Memory Card -->
+                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 hover:border-blue-500/30 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Memory</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="mem-percent" class="text-lg font-bold text-blue-400 tabular-nums">--%</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                                <div id="mem-bar" class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between mt-3">
+                                <span id="mem-usage" class="text-xs text-zinc-400 font-mono">-- / --</span>
+                                <span id="mem-detail" class="text-xs text-zinc-500">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Disk Card -->
+                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 hover:border-emerald-500/30 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Disk</span>
+                                </div>
+                                <div class="text-right">
+                                    <span id="disk-percent" class="text-lg font-bold text-emerald-400 tabular-nums">--%</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                                <div id="disk-bar" class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between mt-3">
+                                <span id="disk-usage" class="text-xs text-zinc-400 font-mono">-- / --</span>
+                                <span id="disk-detail" class="text-xs text-zinc-500">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Network Card -->
+                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 hover:border-purple-500/30 transition-colors">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Network</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-3 rounded-lg bg-zinc-800/50">
+                                    <div class="text-xs text-zinc-500 mb-1">↑ Upload</div>
+                                    <span id="net-sent" class="text-sm font-semibold text-purple-300 font-mono">-</span>
+                                </div>
+                                <div class="text-center p-3 rounded-lg bg-zinc-800/50">
+                                    <div class="text-xs text-zinc-500 mb-1">↓ Download</div>
+                                    <span id="net-recv" class="text-sm font-semibold text-purple-300 font-mono">-</span>
+                                </div>
+                            </div>
+                            <p id="uptime" class="text-xs text-zinc-500 mt-3 text-center">Uptime: -</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- Mobile Stats Drawer -->
+        <div id="mobile-stats-drawer" class="fixed inset-y-0 right-0 w-80 glass border-l border-zinc-800 transform translate-x-full transition-transform duration-300 z-50 lg:hidden overflow-y-auto">
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-zinc-200">System Stats</h3>
+                    <button onclick="toggleMobileSidebar()" class="p-2 rounded-lg hover:bg-zinc-800 transition-colors">
+                        <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Mobile stat cards (same structure as sidebar) -->
+                <div class="space-y-4">
+                    <!-- CPU -->
+                    <div class="rounded-xl p-4 bg-zinc-800/50 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">CPU</span>
+                            <span id="cpu-usage-mobile" class="text-xl font-bold text-mole-400 tabular-nums">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700 rounded-full h-2">
+                            <div id="cpu-bar-mobile" class="bg-gradient-to-r from-mole-500 to-mole-400 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <p id="cpu-model-mobile" class="text-xs text-zinc-500 mt-2 truncate">-</p>
                     </div>
 
-                    <div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6">
-                        <h4 class="text-lg font-semibold mb-3 text-mole-400">What It Does</h4>
-                        <ul class="space-y-2 text-zinc-400 text-sm">
-                            <li class="flex items-start gap-2">
-                                <span class="text-green-500 mt-1">✓</span>
-                                <span>Installs Go (via Homebrew) if not already installed</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="text-green-500 mt-1">✓</span>
-                                <span>Downloads Mole from GitHub to <code class="text-mole-400">~/.mole</code></span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="text-green-500 mt-1">✓</span>
-                                <span>Builds the web server binary</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="text-green-500 mt-1">✓</span>
-                                <span>Creates configuration with no authentication (local network only)</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                <span class="text-green-500 mt-1">✓</span>
-                                <span>Starts the Mole Web UI on port 8081</span>
-                            </li>
-                        </ul>
+                    <!-- Memory -->
+                    <div class="rounded-xl p-4 bg-zinc-800/50 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Memory</span>
+                            <span id="mem-percent-mobile" class="text-xl font-bold text-blue-400 tabular-nums">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700 rounded-full h-2">
+                            <div id="mem-bar-mobile" class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <p id="mem-usage-mobile" class="text-xs text-zinc-500 mt-2">-- / --</p>
                     </div>
 
-                    <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
-                        <div class="flex gap-3">
-                            <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <div class="text-sm">
-                                <p class="text-blue-300 font-medium mb-1">Network Access Required</p>
-                                <p class="text-blue-200/70">Make sure the Mac you're installing on can access this server. Each Mac will run its own instance of Mole to manage itself.</p>
+                    <!-- Disk -->
+                    <div class="rounded-xl p-4 bg-zinc-800/50 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Disk</span>
+                            <span id="disk-percent-mobile" class="text-xl font-bold text-emerald-400 tabular-nums">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700 rounded-full h-2">
+                            <div id="disk-bar-mobile" class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <p id="disk-usage-mobile" class="text-xs text-zinc-500 mt-2">-- / --</p>
+                    </div>
+
+                    <!-- Network -->
+                    <div class="rounded-xl p-4 bg-zinc-800/50 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Network</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="text-xs text-zinc-500">↑ Up</div>
+                                <span id="net-sent-mobile" class="text-sm font-semibold text-purple-300">-</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-zinc-500">↓ Down</div>
+                                <span id="net-recv-mobile" class="text-sm font-semibold text-purple-300">-</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50 mb-6">
-                    <h3 class="text-lg font-semibold mb-4">⚙️ Managing Mole After Installation</h3>
+        <!-- Mobile drawer overlay -->
+        <div id="mobile-drawer-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
-                    <div class="space-y-4 text-sm">
-                        <div>
-                            <h4 class="text-mole-400 font-medium mb-2">Access Your Dashboard:</h4>
-                            <p class="text-zinc-400 mb-2">After installation, open in your browser:</p>
-                            <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs text-green-400">http://localhost:8081</code>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <h4 class="text-mole-400 font-medium mb-2">Start Server:</h4>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cd ~/.mole && ./deploy/start.sh</code>
-                            </div>
-
-                            <div>
-                                <h4 class="text-mole-400 font-medium mb-2">Stop Server:</h4>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cd ~/.mole && ./deploy/stop.sh</code>
-                            </div>
-
-                            <div>
-                                <h4 class="text-mole-400 font-medium mb-2">Check Status:</h4>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">ps aux | grep web-go</code>
-                            </div>
-
-                            <div>
-                                <h4 class="text-mole-400 font-medium mb-2">View Logs:</h4>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">tail -f ~/.mole/deploy/mole-web.log</code>
-                            </div>
-                        </div>
-
-                        <div class="p-3 bg-amber-900/20 border border-amber-700/50 rounded-lg">
-                            <p class="text-amber-200/80 text-xs">
-                                💡 <strong>Tip:</strong> The installer starts the server automatically. It will stop when you restart your Mac. Use the commands above to start it again.
-                            </p>
-                        </div>
-                    </div>
+        <!-- Activity Log Panel -->
+        <div id="activity-log" class="fixed bottom-4 right-4 w-96 max-w-[calc(100vw-2rem)] glass rounded-2xl border border-zinc-800/50 shadow-2xl flex flex-col z-50 transition-all duration-300 hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/50">
+                <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 bg-mole-500 rounded-full" id="activity-indicator"></span>
+                    <span class="text-sm font-semibold text-zinc-300">Activity Log</span>
+                    <span id="activity-count" class="px-2 py-0.5 text-xs bg-zinc-800 rounded-full text-zinc-400 font-mono">0</span>
                 </div>
-
-                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
-                    <h3 class="text-lg font-semibold mb-4">Manual Installation</h3>
-                    <p class="text-zinc-400 mb-4">If you prefer to install manually:</p>
-
-                    <ol class="space-y-3 text-zinc-400 text-sm">
-                        <li class="flex gap-3">
-                            <span class="text-mole-400 font-mono">1.</span>
-                            <div>
-                                <p class="mb-1">Download the installer script:</p>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">curl -fsSL http://<span id="server-hostname-2">-</span>:8081/install.sh -o install-mole.sh</code>
-                            </div>
-                        </li>
-                        <li class="flex gap-3">
-                            <span class="text-mole-400 font-mono">2.</span>
-                            <div>
-                                <p class="mb-1">Review the script (optional but recommended):</p>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cat install-mole.sh</code>
-                            </div>
-                        </li>
-                        <li class="flex gap-3">
-                            <span class="text-mole-400 font-mono">3.</span>
-                            <div>
-                                <p class="mb-1">Run the installer:</p>
-                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">bash install-mole.sh</code>
-                            </div>
-                        </li>
-                    </ol>
-                </div>
-            </section>
-        </main>
-
-        <!-- Log Terminal (Fixed at bottom) -->
-        <div id="log-terminal"
-            class="fixed bottom-4 right-4 w-96 h-64 glass rounded-2xl border border-zinc-700/50 shadow-2xl flex flex-col hidden z-50 transition-all duration-300 transform translate-y-0 translate-x-0">
-            <div
-                class="flex items-center justify-between px-4 py-2 border-b border-zinc-700/50 bg-zinc-800/50 rounded-t-2xl">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-                    <span class="text-xs font-semibold text-zinc-300">Live Logs</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="clearLogs()" class="text-zinc-500 hover:text-zinc-300 text-xs">Clear</button>
-                    <button onclick="toggleLogs()" class="text-zinc-500 hover:text-zinc-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
+                    <button onclick="clearActivityLog()" class="text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors">Clear</button>
+                    <button onclick="toggleActivityLog()" class="p-1 text-zinc-500 hover:text-zinc-300 transition-colors" id="activity-toggle-btn">
+                        <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                 </div>
             </div>
-            <div id="log-content" class="flex-1 p-3 font-mono text-[10px] overflow-y-auto text-zinc-400 space-y-1">
-                <div class="text-zinc-600">-- Logs will appear here --</div>
+            <div id="activity-content" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-72">
+                <div class="text-zinc-600 text-xs text-center py-6">No recent activity</div>
             </div>
         </div>
 
-        <!-- Log Toggle Button -->
-        <button id="log-toggle" onclick="toggleLogs()"
-            class="fixed bottom-6 right-6 p-3 bg-zinc-800 hover:bg-mole-600 text-white rounded-full shadow-lg z-40 transition-all">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                </path>
+        <!-- Activity Log Toggle Button -->
+        <button id="activity-toggle" onclick="toggleActivityLog()"
+            class="fixed bottom-6 right-6 p-3 bg-zinc-800 hover:bg-mole-600 text-white rounded-xl shadow-lg z-40 transition-all border border-zinc-700 hover:border-mole-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
         </button>
     </div>
 
     <script>
+        // Tab status states
+        const tabStatuses = {
+            status: 'idle',
+            clean: 'idle',
+            uninstall: 'idle',
+            analyze: 'idle',
+            optimize: 'idle',
+            purge: 'idle'
+        };
+
+        function setTabStatus(tabName, status) {
+            tabStatuses[tabName] = status;
+            const badge = document.querySelector(`[data-tab-status="${tabName}"]`);
+            if (badge) {
+                badge.className = 'tab-badge ' + status;
+            }
+        }
+
         // Tab switching
         function showTab(name) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -624,6 +952,22 @@
 
             // Load data for certain tabs
             if (name === 'uninstall') loadApps();
+            if (name === 'analyze') loadVolumes();
+        }
+
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const drawer = document.getElementById('mobile-stats-drawer');
+            const overlay = document.getElementById('mobile-drawer-overlay');
+            const isOpen = !drawer.classList.contains('translate-x-full');
+
+            if (isOpen) {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                drawer.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            }
         }
 
         // Format bytes helper
@@ -639,29 +983,146 @@
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             const colors = {
-                success: 'bg-green-600',
-                error: 'bg-red-600',
-                info: 'bg-blue-600',
-                warning: 'bg-yellow-600'
+                success: 'bg-emerald-600 border-emerald-500',
+                error: 'bg-red-600 border-red-500',
+                info: 'bg-blue-600 border-blue-500',
+                warning: 'bg-amber-600 border-amber-500'
             };
-            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${colors[type]} text-white transform transition-all duration-300`;
+            toast.className = `fixed top-20 right-4 px-5 py-3 rounded-xl shadow-2xl z-50 ${colors[type]} text-white transform transition-all duration-300 border font-medium text-sm`;
             toast.textContent = message;
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-20px)';
+            toast.style.transform = 'translateX(20px)';
             document.body.appendChild(toast);
 
-            // Animate in
             setTimeout(() => {
                 toast.style.opacity = '1';
-                toast.style.transform = 'translateY(0)';
+                toast.style.transform = 'translateX(0)';
             }, 10);
 
-            // Animate out and remove
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-20px)';
+                toast.style.transform = 'translateX(20px)';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        }
+
+        // Activity log system
+        const activityLog = [];
+
+        function addActivity(type, title, detail, status = 'running') {
+            const entry = {
+                id: Date.now(),
+                type,
+                title,
+                detail,
+                status,
+                timestamp: new Date()
+            };
+            activityLog.unshift(entry);
+            if (activityLog.length > 50) activityLog.pop();
+            renderActivityLog();
+            updateActivityCount();
+            return entry.id;
+        }
+
+        function updateActivity(id, status, detail = null) {
+            const entry = activityLog.find(e => e.id === id);
+            if (entry) {
+                entry.status = status;
+                if (detail) entry.detail = detail;
+                renderActivityLog();
+                updateActivityCount();
+            }
+        }
+
+        function renderActivityLog() {
+            const content = document.getElementById('activity-content');
+            if (activityLog.length === 0) {
+                content.innerHTML = '<div class="text-zinc-600 text-xs text-center py-6">No recent activity</div>';
+                return;
+            }
+
+            content.innerHTML = activityLog.map(entry => {
+                const colors = {
+                    running: { bg: 'bg-amber-900/20', border: 'border-amber-700/30', text: 'text-amber-300', subtext: 'text-amber-200/70' },
+                    success: { bg: 'bg-emerald-900/20', border: 'border-emerald-700/30', text: 'text-emerald-300', subtext: 'text-emerald-200/70' },
+                    error: { bg: 'bg-red-900/20', border: 'border-red-700/30', text: 'text-red-300', subtext: 'text-red-200/70' }
+                };
+                const c = colors[entry.status] || colors.running;
+                const icon = entry.status === 'running'
+                    ? '<div class="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
+                    : entry.status === 'success'
+                    ? '<svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                    : '<svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+                return `
+                    <div class="flex items-start gap-3 p-3 rounded-lg ${c.bg} border ${c.border} animate-slide-up">
+                        ${icon}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium ${c.text}">${entry.title}</p>
+                            <p class="text-xs ${c.subtext} truncate">${entry.detail}</p>
+                            <p class="text-xs text-zinc-500 mt-1">${formatTimeAgo(entry.timestamp)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        function updateActivityCount() {
+            const runningCount = activityLog.filter(e => e.status === 'running').length;
+            const countEl = document.getElementById('activity-count');
+            const indicator = document.getElementById('activity-indicator');
+
+            countEl.textContent = activityLog.length;
+            indicator.className = runningCount > 0
+                ? 'w-2 h-2 bg-amber-500 rounded-full animate-pulse'
+                : 'w-2 h-2 bg-mole-500 rounded-full';
+        }
+
+        function toggleActivityLog() {
+            const log = document.getElementById('activity-log');
+            const btn = document.getElementById('activity-toggle');
+            const isHidden = log.classList.contains('hidden');
+
+            if (isHidden) {
+                log.classList.remove('hidden');
+                btn.classList.add('hidden');
+            } else {
+                log.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        }
+
+        function clearActivityLog() {
+            activityLog.length = 0;
+            renderActivityLog();
+            updateActivityCount();
+        }
+
+        // Progress helpers
+        function showProgress(tabName, message, detail = '') {
+            const progress = document.getElementById(`${tabName}-progress`);
+            const text = document.getElementById(`${tabName}-progress-text`);
+            const detailEl = document.getElementById(`${tabName}-progress-detail`);
+
+            if (progress) {
+                progress.classList.remove('hidden');
+                if (text) text.textContent = message;
+                if (detailEl) detailEl.textContent = detail;
+            }
+        }
+
+        function hideProgress(tabName) {
+            const progress = document.getElementById(`${tabName}-progress`);
+            if (progress) progress.classList.add('hidden');
         }
 
         // Connection monitoring
@@ -699,11 +1160,11 @@
                 if (latency !== null) {
                     indicator.title = `Latency: ${latency}ms (${connectionQuality})`;
                     latencyEl.textContent = `${latency}ms`;
-                    latencyEl.className = `text-xs ${latency < 100 ? 'text-green-600' : latency < 300 ? 'text-yellow-600' : 'text-orange-600'}`;
+                    latencyEl.className = `text-xs font-mono ${latency < 100 ? 'text-green-500' : latency < 300 ? 'text-yellow-500' : 'text-orange-500'}`;
                 } else {
                     indicator.title = 'Connection lost';
                     latencyEl.textContent = 'offline';
-                    latencyEl.className = 'text-xs text-red-600';
+                    latencyEl.className = 'text-xs text-red-500 font-mono';
                 }
             }
         }
@@ -740,86 +1201,83 @@
             if (logEventSource) logEventSource.close();
             logEventSource = new EventSource('/api/logs');
             logEventSource.onmessage = function (e) {
-                addLog(e.data);
+                // Add to activity log instead of separate log panel
+                if (e.data && e.data.trim()) {
+                    addActivity('log', 'System Log', e.data, 'success');
+                }
             };
             logEventSource.onerror = function () {
                 setTimeout(startLogStream, 5000);
             };
         }
 
-        function addLog(msg) {
-            const content = document.getElementById('log-content');
-            const entry = document.createElement('div');
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            content.appendChild(entry);
-            content.scrollTop = content.scrollHeight;
-
-            // Show terminal if hidden and message is relevant
-            if (document.getElementById('log-terminal').classList.contains('hidden') && msg.includes('mole')) {
-                toggleLogs();
-            }
-        }
-
-        function clearLogs() {
-            document.getElementById('log-content').innerHTML = '<div class="text-zinc-600">-- Logs cleared --</div>';
-        }
-
-        function toggleLogs() {
-            const term = document.getElementById('log-terminal');
-            const btn = document.getElementById('log-toggle');
-            term.classList.toggle('hidden');
-            btn.classList.toggle('hidden');
-        }
-
-        // Copy install command
-        function copyInstallCommand(type) {
-            const commandId = type === 'hostname' ? 'install-command-hostname' : 'install-command-ip';
-            const commandText = document.getElementById(commandId).textContent;
-            navigator.clipboard.writeText(commandText).then(() => {
-                showToast('Install command copied to clipboard!', 'success');
-            }).catch(err => {
-                showToast('Failed to copy: ' + err.message, 'error');
-            });
-        }
-
         function updateStatus(data) {
             // Header
             document.getElementById('hostname').textContent = data.hostname;
 
-            // Update install command hostname and IP
-            const shortHostname = data.hostname.split('.')[0];
-            const hostnameEl = document.getElementById('server-hostname');
-            const hostnameEl2 = document.getElementById('server-hostname-2');
-            const ipEl = document.getElementById('server-ip');
-
-            if (hostnameEl) hostnameEl.textContent = shortHostname + '.local';
-            if (hostnameEl2) hostnameEl2.textContent = shortHostname + '.local';
-            if (ipEl && data.local_ip) ipEl.textContent = data.local_ip;
-
-            // CPU
-            document.getElementById('cpu-usage').textContent = data.cpu.usage.toFixed(1) + '%';
-            document.getElementById('cpu-bar').style.width = data.cpu.usage + '%';
+            // CPU - update both sidebar and mobile
+            const cpuUsage = data.cpu.usage.toFixed(1) + '%';
+            const cpuWidth = data.cpu.usage + '%';
+            document.getElementById('cpu-usage').textContent = cpuUsage;
+            document.getElementById('cpu-bar').style.width = cpuWidth;
             document.getElementById('cpu-model').textContent = data.cpu.model;
             document.getElementById('cpu-cores').textContent = data.cpu.cores + ' cores';
 
+            // Mobile CPU
+            const cpuUsageMobile = document.getElementById('cpu-usage-mobile');
+            if (cpuUsageMobile) {
+                cpuUsageMobile.textContent = cpuUsage;
+                document.getElementById('cpu-bar-mobile').style.width = cpuWidth;
+                document.getElementById('cpu-model-mobile').textContent = data.cpu.model;
+            }
+
             // Memory
-            document.getElementById('mem-usage').textContent = formatBytes(data.memory.used) + ' / ' + formatBytes(data.memory.total);
-            document.getElementById('mem-percent').textContent = data.memory.percent.toFixed(1) + '%';
-            document.getElementById('mem-bar').style.width = data.memory.percent + '%';
-            document.getElementById('mem-detail').textContent = formatBytes(data.memory.available) + ' available';
+            const memUsage = formatBytes(data.memory.used) + ' / ' + formatBytes(data.memory.total);
+            const memPercent = data.memory.percent.toFixed(1) + '%';
+            const memWidth = data.memory.percent + '%';
+            document.getElementById('mem-usage').textContent = memUsage;
+            document.getElementById('mem-percent').textContent = memPercent;
+            document.getElementById('mem-bar').style.width = memWidth;
+            document.getElementById('mem-detail').textContent = formatBytes(data.memory.available) + ' free';
             document.getElementById('total-ram').textContent = formatBytes(data.memory.total);
+
+            // Mobile Memory
+            const memPercentMobile = document.getElementById('mem-percent-mobile');
+            if (memPercentMobile) {
+                memPercentMobile.textContent = memPercent;
+                document.getElementById('mem-bar-mobile').style.width = memWidth;
+                document.getElementById('mem-usage-mobile').textContent = memUsage;
+            }
 
             // Disk
             const diskUsed = data.disk.total - data.disk.free;
-            document.getElementById('disk-usage').textContent = formatBytes(diskUsed) + ' / ' + formatBytes(data.disk.total);
-            document.getElementById('disk-percent').textContent = data.disk.percent.toFixed(1) + '%';
-            document.getElementById('disk-bar').style.width = data.disk.percent + '%';
+            const diskUsage = formatBytes(diskUsed) + ' / ' + formatBytes(data.disk.total);
+            const diskPercent = data.disk.percent.toFixed(1) + '%';
+            const diskWidth = data.disk.percent + '%';
+            document.getElementById('disk-usage').textContent = diskUsage;
+            document.getElementById('disk-percent').textContent = diskPercent;
+            document.getElementById('disk-bar').style.width = diskWidth;
             document.getElementById('disk-detail').textContent = formatBytes(data.disk.free) + ' free';
             document.getElementById('total-disk').textContent = formatBytes(data.disk.total);
+
+            // Mobile Disk
+            const diskPercentMobile = document.getElementById('disk-percent-mobile');
+            if (diskPercentMobile) {
+                diskPercentMobile.textContent = diskPercent;
+                document.getElementById('disk-bar-mobile').style.width = diskWidth;
+                document.getElementById('disk-usage-mobile').textContent = diskUsage;
+            }
 
             // Network
             document.getElementById('net-sent').textContent = formatBytes(data.network.bytes_sent);
             document.getElementById('net-recv').textContent = formatBytes(data.network.bytes_recv);
+
+            // Mobile Network
+            const netSentMobile = document.getElementById('net-sent-mobile');
+            if (netSentMobile) {
+                netSentMobile.textContent = formatBytes(data.network.bytes_sent);
+                document.getElementById('net-recv-mobile').textContent = formatBytes(data.network.bytes_recv);
+            }
 
             // System info
             document.getElementById('os-info').textContent = data.os;
@@ -838,27 +1296,67 @@
         }
 
         async function runClean() {
+            // Get selected categories
+            const selectedCategories = [...document.querySelectorAll('.clean-category:checked')].map(el => el.value);
+            if (selectedCategories.length === 0) {
+                showToast('Please select at least one category to clean', 'error');
+                return;
+            }
+
             if (!confirm('Are you sure you want to clean the selected categories?')) return;
+
+            setTabStatus('clean', 'running');
+            showProgress('clean', 'Cleaning system...', 'Removing cache and temporary files');
+            const activityId = addActivity('clean', 'System Cleanup', 'Starting cleanup process...', 'running');
 
             const result = document.getElementById('clean-result');
             result.classList.remove('hidden');
             result.querySelector('pre').textContent = 'Cleaning...';
 
             try {
-                const response = await fetch('/api/clean', { method: 'POST' });
-                if (!response.ok) throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                let totalCleaned = 0;
+                let allOutput = [];
+                let hasError = false;
 
-                const data = await response.json();
-                if (!data.success) {
-                    showToast(`Cleanup failed: ${data.message}`, 'error');
-                } else {
-                    const cleaned = formatBytes(data.cleaned_bytes || 0);
-                    showToast(`Successfully cleaned ${cleaned}!`, 'success');
+                // Process each category
+                for (const category of selectedCategories) {
+                    const response = await fetch(`/api/clean?category=${category}`, { method: 'POST' });
+                    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+                    const data = await response.json();
+                    if (data.success) {
+                        totalCleaned += data.cleaned_bytes || 0;
+                        if (data.output) allOutput.push(data.output);
+                    } else {
+                        hasError = true;
+                        allOutput.push(`${category}: ${data.message}`);
+                    }
                 }
-                result.querySelector('pre').textContent = data.output || data.message;
+
+                hideProgress('clean');
+
+                const cleaned = formatBytes(totalCleaned);
+                if (hasError) {
+                    setTabStatus('clean', 'error');
+                    updateActivity(activityId, 'error', 'Some cleanup tasks failed');
+                    showToast('Some cleanup tasks failed', 'error');
+                } else {
+                    setTabStatus('clean', 'complete');
+                    updateActivity(activityId, 'success', `Freed ${cleaned} of disk space`);
+                    showToast(`Successfully cleaned ${cleaned}!`, 'success');
+                    setTimeout(() => setTabStatus('clean', 'idle'), 5000);
+                }
+
+                // Refresh disk stats to show freed space
+                loadStorageBreakdown();
+                fetch('/api/status').then(r => r.json()).then(updateStatus).catch(() => {});
+
+                result.querySelector('pre').textContent = allOutput.join('\n\n') || 'Cleanup complete';
             } catch (err) {
+                hideProgress('clean');
+                setTabStatus('clean', 'error');
+                updateActivity(activityId, 'error', err.message);
                 showToast(`Network error: ${err.message}`, 'error');
-                console.error('Clean operation failed:', err);
             }
         }
 
@@ -866,10 +1364,9 @@
         let allApps = [];
         async function loadApps() {
             const list = document.getElementById('apps-list');
-            // Skeleton loader
             list.innerHTML = `<div class="space-y-2 animate-pulse">
                 ${[1,2,3,4,5].map(() => `
-                    <div class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+                    <div class="flex items-center gap-3 p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
                         <div class="h-4 bg-zinc-700 rounded w-3/4"></div>
                         <div class="h-4 bg-zinc-700 rounded w-1/4"></div>
                     </div>
@@ -880,29 +1377,55 @@
                 const response = await fetch('/api/uninstall/apps');
                 if (!response.ok) throw new Error(`Server error: ${response.status}`);
                 allApps = await response.json();
+                // Sort by size, largest first
+                allApps.sort((a, b) => b.size - a.size);
                 renderApps(allApps);
             } catch (err) {
                 showToast(`Failed to load applications: ${err.message}`, 'error');
-                list.innerHTML = '<div class="text-red-500 text-center py-8">Failed to load applications</div>';
+                list.innerHTML = '<div class="text-red-400 text-center py-12">Failed to load applications</div>';
             }
         }
 
         function renderApps(apps) {
             const list = document.getElementById('apps-list');
             if (!apps || apps.length === 0) {
-                list.innerHTML = '<div class="text-zinc-500 text-center py-8">No applications found</div>';
+                list.innerHTML = '<div class="text-zinc-500 text-center py-12">No applications found</div>';
                 return;
             }
 
-            list.innerHTML = apps.map(app => `
-                <label class="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 transition-colors">
-                    <input type="checkbox" class="app-checkbox rounded text-red-500 focus:ring-red-500" value="${app.path}" onchange="updateUninstallBtn()">
+            list.innerHTML = apps.map(app => {
+                const initial = app.name.charAt(0).toUpperCase();
+                const colors = [
+                    'from-blue-500 to-blue-600',
+                    'from-purple-500 to-purple-600',
+                    'from-pink-500 to-pink-600',
+                    'from-red-500 to-red-600',
+                    'from-orange-500 to-orange-600',
+                    'from-amber-500 to-amber-600',
+                    'from-green-500 to-green-600',
+                    'from-teal-500 to-teal-600',
+                    'from-cyan-500 to-cyan-600',
+                    'from-indigo-500 to-indigo-600'
+                ];
+                const colorIndex = app.name.charCodeAt(0) % colors.length;
+                const gradient = colors[colorIndex];
+                const iconUrl = '/api/app/icon?path=' + encodeURIComponent(app.path);
+
+                return `
+                <label class="group flex items-center gap-3 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 hover:bg-zinc-800/50 transition-all">
+                    <input type="checkbox" class="app-checkbox w-4 h-4 rounded text-red-500 bg-zinc-700 border-zinc-600 focus:ring-red-500 focus:ring-offset-0" value="${app.path}" onchange="updateUninstallBtn()">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img src="${iconUrl}" alt="${app.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-full h-full bg-gradient-to-br ${gradient} items-center justify-center text-white font-bold text-lg absolute inset-0" style="display: none;">
+                            ${initial}
+                        </div>
+                    </div>
                     <div class="flex-1 min-w-0">
-                        <span class="font-medium truncate block">${app.name}</span>
-                        <span class="text-xs text-zinc-500">${app.size_human}</span>
+                        <span class="font-medium truncate block text-zinc-200 group-hover:text-zinc-100">${app.name}</span>
+                        <span class="text-xs text-zinc-500 font-mono">${app.size_human}</span>
                     </div>
                 </label>
-            `).join('');
+            `}).join('');
         }
 
         function filterApps() {
@@ -921,6 +1444,10 @@
             if (apps.length === 0) return;
             if (!confirm(`Are you sure you want to uninstall ${apps.length} app(s)?`)) return;
 
+            setTabStatus('uninstall', 'running');
+            showProgress('uninstall', 'Uninstalling...', `Removing ${apps.length} application(s)`);
+            const activityId = addActivity('uninstall', 'App Uninstall', `Removing ${apps.length} app(s)`, 'running');
+
             try {
                 const response = await fetch('/api/uninstall', {
                     method: 'POST',
@@ -930,46 +1457,170 @@
 
                 if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
-                const data = await response.json();
+                hideProgress('uninstall');
+                setTabStatus('uninstall', 'complete');
+                updateActivity(activityId, 'success', `Removed ${apps.length} app(s)`);
                 showToast(`Successfully uninstalled ${apps.length} app(s)!`, 'success');
+                setTimeout(() => setTabStatus('uninstall', 'idle'), 5000);
                 loadApps();
+                // Refresh disk stats to show freed space
+                loadStorageBreakdown();
+                // Force a status refresh for sidebar stats
+                fetch('/api/status').then(r => r.json()).then(updateStatus).catch(() => {});
             } catch (err) {
+                hideProgress('uninstall');
+                setTabStatus('uninstall', 'error');
+                updateActivity(activityId, 'error', err.message);
                 showToast(`Uninstall failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Volume management functions
+        async function loadVolumes() {
+            try {
+                const response = await fetch('/api/volumes');
+                const volumes = await response.json();
+
+                const volumesList = document.getElementById('volumes-list');
+                if (!volumesList) return;
+
+                volumesList.innerHTML = volumes.map(vol => {
+                    const isLarge = vol.total_bytes > 100 * 1024 * 1024 * 1024; // > 100GB
+                    const displayName = vol.mount_point === '/' ? 'Main Drive' :
+                                       vol.mount_point === '/System/Volumes/Data' ? 'System Data' :
+                                       vol.mount_point.replace('/Volumes/', '');
+
+                    return `
+                        <button onclick="analyzeVolume('${vol.mount_point}')"
+                                class="glass rounded-xl p-4 border border-zinc-700/50 hover:border-mole-500/50 transition-all text-left group">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-medium text-zinc-200 group-hover:text-mole-400 transition-colors">
+                                    ${displayName}
+                                </span>
+                                ${vol.is_main ? '<span class="text-xs px-2 py-0.5 bg-mole-500/20 text-mole-400 rounded-full">Main</span>' : ''}
+                            </div>
+                            <div class="text-xs text-zinc-500 space-y-1">
+                                <div class="flex justify-between">
+                                    <span>Used:</span>
+                                    <span class="font-medium text-zinc-400">${vol.used_human}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total:</span>
+                                    <span class="font-medium text-zinc-400">${vol.total_human}</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-zinc-800 rounded-full h-1.5 mt-2">
+                                <div class="h-full rounded-full bg-gradient-to-r from-mole-500 to-blue-400"
+                                     style="width: ${vol.used_percent}%"></div>
+                            </div>
+                            <div class="text-xs text-zinc-600 mt-1 text-right">${vol.used_percent.toFixed(1)}% used</div>
+                        </button>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error('Failed to load volumes:', err);
+                showToast('Failed to load volumes', 'error');
+            }
+        }
+
+        async function analyzeVolume(volumePath) {
+            const section = document.getElementById('disk-result-section');
+            const list = document.getElementById('disk-analysis-list');
+
+            section.classList.remove('hidden');
+            list.innerHTML = '<div class="text-zinc-500 text-center py-8"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Analyzing ' + volumePath + '...</div>';
+
+            try {
+                const response = await fetch('/api/volumes/analyze?path=' + encodeURIComponent(volumePath));
+                const data = await response.json();
+
+                if (data.categories && data.categories.length > 0) {
+                    list.innerHTML = data.categories.map(cat => `
+                        <div class="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <span class="text-2xl">${cat.icon}</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium text-zinc-200 truncate">${cat.name}</p>
+                                    <p class="text-xs text-zinc-500">${cat.size_human}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                    <div class="h-full rounded-full" style="width: ${Math.min(100, cat.percent)}%; background-color: ${cat.color};"></div>
+                                </div>
+                                <span class="text-xs text-zinc-500 w-12 text-right">${cat.percent.toFixed(1)}%</span>
+                                <button onclick="analyzeDisk('${volumePath}/${cat.name}')"
+                                        class="px-3 py-1 bg-zinc-800 hover:bg-mole-600 rounded-lg text-xs transition-colors border border-zinc-700">
+                                    Dig Deeper
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="text-zinc-500 text-center py-8">No large directories found</div>';
+                }
+
+            } catch (err) {
+                console.error('Failed to analyze volume:', err);
+                list.innerHTML = '<div class="text-red-500 text-center py-8">Failed to analyze volume</div>';
             }
         }
 
         // Disk analyzer functions
         async function analyzeDisk(path) {
             const pathInput = document.getElementById('analyze-path');
-            const targetPath = path || pathInput.value || (pathInput.value = '~'.replace('~', '/Users/' + document.getElementById('hostname').textContent.split('.')[0]));
+            const targetPath = path || pathInput.value || getUserHome();
+
+            // Update the input field with the current path
+            if (pathInput) pathInput.value = targetPath;
+
+            setTabStatus('analyze', 'running');
+            showProgress('analyze', 'Scanning...', `Analyzing ${targetPath}`);
 
             const result = document.getElementById('analyze-result');
-            result.innerHTML = '<div class="text-zinc-500 text-center py-8">Scanning...</div>';
+            result.innerHTML = '<div class="text-zinc-500 text-center py-12">Scanning...</div>';
 
-            const response = await fetch('/api/analyze?path=' + encodeURIComponent(targetPath));
-            const entries = await response.json();
+            try {
+                const response = await fetch('/api/analyze?path=' + encodeURIComponent(targetPath));
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const entries = await response.json();
 
-            // Update breadcrumb
-            updateBreadcrumb(targetPath);
+                hideProgress('analyze');
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
 
-            // Render entries
-            if (!entries || entries.length === 0) {
-                result.innerHTML = '<div class="text-zinc-500 text-center py-8">No items found</div>';
-                return;
+                // Update breadcrumb
+                updateBreadcrumb(targetPath);
+
+                if (!entries || !Array.isArray(entries) || entries.length === 0) {
+                    result.innerHTML = '<div class="text-zinc-500 text-center py-12">No items found in this folder</div>';
+                    return;
+                }
+
+                // Escape paths for onclick handlers
+                const escapePath = (p) => p.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+                result.innerHTML = entries.map(entry => `
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer transition-all border border-transparent hover:border-zinc-700/50" onclick="${entry.is_dir ? `analyzeDisk('${escapePath(entry.path)}')` : ''}">
+                        <span class="text-lg">${entry.is_dir ? '📁' : '📄'}</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="truncate block text-zinc-200">${entry.name}</span>
+                        </div>
+                        <span class="text-sm text-zinc-400 font-mono">${entry.size_human}</span>
+                        <div class="w-20 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-mole-500 to-mole-400 h-1.5 rounded-full" style="width: ${Math.min(100, (entry.size / (entries[0]?.size || 1)) * 100)}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Analyze error:', err);
+                hideProgress('analyze');
+                setTabStatus('analyze', 'error');
+                result.innerHTML = `<div class="text-red-400 text-center py-12">Failed to analyze: ${err.message}</div>`;
             }
-
-            result.innerHTML = entries.map(entry => `
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer transition-colors" onclick="${entry.is_dir ? `analyzeDisk('${entry.path}')` : ''}">
-                    <span class="text-lg">${entry.is_dir ? '📁' : '📄'}</span>
-                    <div class="flex-1 min-w-0">
-                        <span class="truncate block">${entry.name}</span>
-                    </div>
-                    <span class="text-sm text-zinc-400 font-mono">${entry.size_human}</span>
-                    <div class="w-24 bg-zinc-700/50 rounded-full h-1.5">
-                        <div class="bg-mole-500 h-1.5 rounded-full" style="width: ${Math.min(100, (entry.size / (entries[0]?.size || 1)) * 100)}%"></div>
-                    </div>
-                </div>
-            `).join('');
         }
 
         function updateBreadcrumb(path) {
@@ -977,53 +1628,154 @@
             const breadcrumb = document.getElementById('breadcrumb');
             let currentPath = '';
 
-            breadcrumb.innerHTML = '<span class="cursor-pointer hover:text-mole-400" onclick="analyzeDisk(\'/\')">/</span>';
+            breadcrumb.innerHTML = '<span class="cursor-pointer hover:text-mole-400 text-zinc-400 transition-colors" onclick="analyzeDisk(\'/\')">root</span>';
             parts.forEach((part, i) => {
                 currentPath += '/' + part;
                 const p = currentPath;
-                breadcrumb.innerHTML += `<span class="text-zinc-600">/</span><span class="cursor-pointer hover:text-mole-400" onclick="analyzeDisk('${p}')">${part}</span>`;
+                breadcrumb.innerHTML += `<span class="text-zinc-600 mx-1">/</span><span class="cursor-pointer hover:text-mole-400 text-zinc-400 transition-colors" onclick="analyzeDisk('${p}')">${part}</span>`;
             });
+        }
+
+        // Get user home directory
+        let userHomeCache = null;
+        function getUserHome() {
+            if (userHomeCache) return userHomeCache;
+            const hostname = document.getElementById('hostname').textContent;
+            if (hostname && hostname !== '-') {
+                userHomeCache = '/Users/' + hostname.split('.')[0];
+            }
+            return userHomeCache || '/Users';
+        }
+
+        // Large files finder
+        async function findLargeFiles() {
+            const section = document.getElementById('large-files-section');
+            const list = document.getElementById('large-files-list');
+
+            section.classList.remove('hidden');
+            list.innerHTML = '<div class="text-zinc-500 text-center py-4"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Scanning for large files... This may take a moment.</div>';
+
+            setTabStatus('analyze', 'running');
+            const activityId = addActivity('analyze', 'Finding Large Files', 'Scanning your Mac for files over 100MB', 'running');
+
+            try {
+                const homePath = getUserHome();
+                console.log('Scanning path:', homePath);
+                const url = '/api/analyze/large?min_size=104857600&path=' + encodeURIComponent(homePath);
+                console.log('API URL:', url);
+
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const files = await response.json();
+                console.log('Files found:', files ? files.length : 'null');
+
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
+
+                if (!files || !Array.isArray(files) || files.length === 0) {
+                    updateActivity(activityId, 'success', 'No large files found');
+                    list.innerHTML = '<div class="text-zinc-500 text-center py-4">No files over 100MB found. Nice and tidy!</div>';
+                    return;
+                }
+
+                updateActivity(activityId, 'success', `Found ${files.length} large file(s)`);
+                list.innerHTML = files.slice(0, 20).map(file => `
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-all border border-transparent hover:border-zinc-700/50">
+                        <span class="text-lg">📄</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="truncate block text-zinc-200 text-sm">${file.name}</span>
+                            <span class="text-xs text-zinc-500 truncate block">${file.path}</span>
+                        </div>
+                        <span class="text-sm font-semibold text-red-400 font-mono">${file.size_human}</span>
+                    </div>
+                `).join('') + (files.length > 20 ? `<div class="text-center text-xs text-zinc-500 py-2">Showing top 20 of ${files.length} files</div>` : '');
+            } catch (err) {
+                console.error('Large files scan error:', err);
+                setTabStatus('analyze', 'error');
+                updateActivity(activityId, 'error', 'Failed to scan for large files');
+                list.innerHTML = `<div class="text-red-400 text-center py-4">Failed to scan: ${err.message}</div>`;
+            }
+        }
+
+        function hideLargeFiles() {
+            document.getElementById('large-files-section').classList.add('hidden');
         }
 
         // Optimize function
         async function runOptimize() {
+            setTabStatus('optimize', 'running');
+            showProgress('optimize', 'Optimizing...', 'Rebuilding system caches');
+            const activityId = addActivity('optimize', 'System Optimization', 'Running optimization tasks', 'running');
 
             const result = document.getElementById('optimize-result');
             result.classList.remove('hidden');
             result.querySelector('pre').textContent = 'Optimizing...';
 
-            const response = await fetch('/api/optimize', { method: 'POST' });
-            const data = await response.json();
-            result.querySelector('pre').textContent = data.output || data.message;
+            try {
+                const response = await fetch('/api/optimize', { method: 'POST' });
+                const data = await response.json();
+
+                hideProgress('optimize');
+                setTabStatus('optimize', 'complete');
+                updateActivity(activityId, 'success', 'System optimization complete');
+                showToast('System optimization complete!', 'success');
+                setTimeout(() => setTabStatus('optimize', 'idle'), 5000);
+
+                result.querySelector('pre').textContent = data.output || data.message;
+            } catch (err) {
+                hideProgress('optimize');
+                setTabStatus('optimize', 'error');
+                updateActivity(activityId, 'error', err.message);
+                showToast(`Optimization failed: ${err.message}`, 'error');
+            }
         }
 
         // Purge functions
         let purgeItems = [];
         async function scanPurge() {
             const path = document.getElementById('purge-path').value || '/Users';
+
+            setTabStatus('purge', 'running');
+            showProgress('purge', 'Scanning...', `Finding artifacts in ${path}`);
+
             const list = document.getElementById('purge-list');
-            list.innerHTML = '<div class="text-zinc-500 text-center py-8">Scanning...</div>';
+            list.innerHTML = '<div class="text-zinc-500 text-center py-12">Scanning...</div>';
 
-            const response = await fetch('/api/purge/scan?path=' + encodeURIComponent(path));
-            purgeItems = await response.json();
+            try {
+                const response = await fetch('/api/purge/scan?path=' + encodeURIComponent(path));
+                purgeItems = await response.json();
 
-            if (!purgeItems || purgeItems.length === 0) {
-                list.innerHTML = '<div class="text-zinc-500 text-center py-8">No artifacts found</div>';
-                return;
+                hideProgress('purge');
+                setTabStatus('purge', 'complete');
+                setTimeout(() => setTabStatus('purge', 'idle'), 3000);
+
+                if (!purgeItems || purgeItems.length === 0) {
+                    list.innerHTML = '<div class="text-zinc-500 text-center py-12">No artifacts found</div>';
+                    return;
+                }
+
+                list.innerHTML = purgeItems.map((item, i) => `
+                    <label class="group flex items-center gap-3 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 hover:bg-zinc-800/50 transition-all">
+                        <input type="checkbox" class="purge-checkbox w-4 h-4 rounded text-red-500 bg-zinc-700 border-zinc-600 focus:ring-red-500 focus:ring-offset-0" value="${i}" onchange="updatePurgeTotal()">
+                        <span class="px-2 py-1 text-xs rounded-md bg-zinc-700 text-zinc-300 font-mono">${item.type}</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-sm truncate block text-zinc-300 group-hover:text-zinc-200">${item.path}</span>
+                        </div>
+                        <span class="text-sm text-zinc-400 font-mono">${item.size_human}</span>
+                    </label>
+                `).join('');
+
+                updatePurgeTotal();
+            } catch (err) {
+                hideProgress('purge');
+                setTabStatus('purge', 'error');
+                list.innerHTML = '<div class="text-red-400 text-center py-12">Scan failed</div>';
             }
-
-            list.innerHTML = purgeItems.map((item, i) => `
-                <label class="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 transition-colors">
-                    <input type="checkbox" class="purge-checkbox rounded text-red-500 focus:ring-red-500" value="${i}" onchange="updatePurgeTotal()">
-                    <span class="px-2 py-0.5 text-xs rounded bg-zinc-700 text-zinc-300">${item.type}</span>
-                    <div class="flex-1 min-w-0">
-                        <span class="text-sm truncate block text-zinc-300">${item.path}</span>
-                    </div>
-                    <span class="text-sm text-zinc-400 font-mono">${item.size_human}</span>
-                </label>
-            `).join('');
-
-            updatePurgeTotal();
         }
 
         function updatePurgeTotal() {
@@ -1042,6 +1794,10 @@
             if (paths.length === 0) return;
             if (!confirm(`Are you sure you want to delete ${paths.length} item(s)?`)) return;
 
+            setTabStatus('purge', 'running');
+            showProgress('purge', 'Purging...', `Deleting ${paths.length} item(s)`);
+            const activityId = addActivity('purge', 'Artifact Purge', `Deleting ${paths.length} item(s)`, 'running');
+
             try {
                 const response = await fetch('/api/purge', {
                     method: 'POST',
@@ -1051,11 +1807,224 @@
 
                 if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
-                await response.json();
+                hideProgress('purge');
+                setTabStatus('purge', 'complete');
+                updateActivity(activityId, 'success', `Deleted ${paths.length} item(s)`);
                 showToast(`Successfully purged ${paths.length} item(s)!`, 'success');
+                setTimeout(() => setTabStatus('purge', 'idle'), 5000);
                 scanPurge();
             } catch (err) {
+                hideProgress('purge');
+                setTabStatus('purge', 'error');
+                updateActivity(activityId, 'error', err.message);
                 showToast(`Purge failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Storage breakdown and health report
+        let lastHealthData = null;
+
+        async function loadStorageBreakdown() {
+            try {
+                const response = await fetch('/api/storage/breakdown');
+                const data = await response.json();
+
+                // Update storage summary
+                document.getElementById('storage-used').textContent = data.used_human + ' used';
+                document.getElementById('storage-free').textContent = data.free_human + ' available';
+
+                // Build storage bar
+                const bar = document.getElementById('storage-bar');
+                const usedPercent = (data.used / data.total) * 100;
+                let barHTML = '';
+
+                // Add category segments
+                data.categories.forEach(cat => {
+                    const width = (cat.size / data.total) * 100;
+                    if (width > 0.5) { // Only show if > 0.5%
+                        barHTML += `<div style="width: ${width}%; background-color: ${cat.color};" title="${cat.name}: ${cat.size_human}"></div>`;
+                    }
+                });
+
+                // Add "Other" segment
+                const categorizedSize = data.categories.reduce((sum, c) => sum + c.size, 0);
+                const otherSize = data.used - categorizedSize;
+                if (otherSize > 0) {
+                    const otherWidth = (otherSize / data.total) * 100;
+                    barHTML += `<div style="width: ${otherWidth}%; background-color: #71717a;" title="Other: ${formatBytes(otherSize)}"></div>`;
+                }
+
+                // Add free space
+                const freeWidth = (data.free / data.total) * 100;
+                barHTML += `<div style="width: ${freeWidth}%; background-color: #27272a;" title="Free: ${data.free_human}"></div>`;
+
+                bar.innerHTML = barHTML;
+
+                // Build category legend
+                const categories = document.getElementById('storage-categories');
+                categories.innerHTML = data.categories.map(cat => {
+                    const path = cat.name === 'Applications' ? '/Applications' : getUserHome() + '/' + cat.name;
+                    return `
+                    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors cursor-pointer group" onclick="showTab('analyze'); analyzeDisk('${path}')">
+                        <span class="text-lg">${cat.icon}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-zinc-300 group-hover:text-mole-400 transition-colors">${cat.name}</p>
+                            <p class="text-xs text-zinc-500">${cat.size_human}</p>
+                        </div>
+                        <div class="w-12 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                            <div class="h-full rounded-full" style="width: ${Math.min(100, cat.percent)}%; background-color: ${cat.color};"></div>
+                        </div>
+                        <svg class="w-4 h-4 text-zinc-600 group-hover:text-mole-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>`;
+                }).join('') + `
+                    <div class="flex items-center gap-3 p-2 rounded-lg opacity-60">
+                        <span class="text-lg">📦</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-zinc-300">Other</p>
+                            <p class="text-xs text-zinc-500">${formatBytes(otherSize)}</p>
+                        </div>
+                        <div class="w-12 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                            <div class="h-full rounded-full bg-zinc-500" style="width: ${Math.min(100, (otherSize / data.used) * 100)}%;"></div>
+                        </div>
+                    </div>
+                `;
+
+                // Build cleanup suggestions
+                if (data.suggestions && data.suggestions.length > 0) {
+                    const suggestionsCard = document.getElementById('cleanup-suggestions-card');
+                    const suggestionsList = document.getElementById('cleanup-suggestions-list');
+                    const totalCleanable = data.suggestions.reduce((sum, s) => sum + s.size, 0);
+
+                    document.getElementById('cleanup-total-size').textContent = formatBytes(totalCleanable) + ' can be freed';
+
+                    suggestionsList.innerHTML = data.suggestions.map(s => `
+                        <div class="flex items-center gap-4 p-3 rounded-xl bg-zinc-800/30 border border-zinc-700/50 hover:border-mole-500/50 transition-all">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-zinc-200">${s.title}</p>
+                                <p class="text-xs text-zinc-500">${s.description}</p>
+                            </div>
+                            <span class="text-sm font-semibold text-mole-400">${s.size_human}</span>
+                            <button onclick="showTab('clean')" class="px-3 py-1.5 text-xs bg-mole-600 hover:bg-mole-500 rounded-lg transition-colors font-medium">
+                                Clean
+                            </button>
+                        </div>
+                    `).join('');
+
+                    suggestionsCard.classList.remove('hidden');
+                } else {
+                    document.getElementById('cleanup-suggestions-card').classList.add('hidden');
+                }
+
+            } catch (err) {
+                console.error('Failed to load storage breakdown:', err);
+            }
+        }
+
+        function updateHealthReport(statusData) {
+            lastHealthData = statusData;
+
+            const cpuUsage = statusData.cpu.usage;
+            const memPercent = statusData.memory.percent;
+            const diskPercent = statusData.disk.percent;
+
+            // Update health indicator values
+            document.getElementById('health-cpu-value').textContent = cpuUsage.toFixed(0) + '%';
+            document.getElementById('health-mem-value').textContent = memPercent.toFixed(0) + '%';
+            document.getElementById('health-disk-value').textContent = diskPercent.toFixed(0) + '%';
+
+            // Determine status for each metric
+            function getStatus(value, warnThreshold, critThreshold) {
+                if (value >= critThreshold) return { label: 'High', class: 'bg-red-500/20 text-red-400' };
+                if (value >= warnThreshold) return { label: 'Moderate', class: 'bg-amber-500/20 text-amber-400' };
+                return { label: 'Good', class: 'bg-emerald-500/20 text-emerald-400' };
+            }
+
+            const cpuStatus = getStatus(cpuUsage, 70, 90);
+            const memStatus = getStatus(memPercent, 75, 90);
+            const diskStatus = getStatus(diskPercent, 80, 95);
+
+            document.getElementById('health-cpu-status').textContent = cpuStatus.label;
+            document.getElementById('health-cpu-status').className = `text-xs px-2 py-0.5 rounded-full ${cpuStatus.class}`;
+
+            document.getElementById('health-mem-status').textContent = memStatus.label;
+            document.getElementById('health-mem-status').className = `text-xs px-2 py-0.5 rounded-full ${memStatus.class}`;
+
+            document.getElementById('health-disk-status').textContent = diskStatus.label;
+            document.getElementById('health-disk-status').className = `text-xs px-2 py-0.5 rounded-full ${diskStatus.class}`;
+
+            // Determine overall health
+            const issues = [];
+            if (cpuUsage >= 90) issues.push('CPU usage is very high');
+            else if (cpuUsage >= 70) issues.push('CPU usage is elevated');
+
+            if (memPercent >= 90) issues.push('Memory is nearly full');
+            else if (memPercent >= 75) issues.push('Memory usage is high');
+
+            if (diskPercent >= 95) issues.push('Storage is almost full');
+            else if (diskPercent >= 80) issues.push('Storage is getting low');
+
+            const healthIcon = document.getElementById('health-icon');
+            const healthTitle = document.getElementById('health-title');
+            const healthSubtitle = document.getElementById('health-subtitle');
+            const healthRecommendations = document.getElementById('health-recommendations');
+            const recommendationsList = document.getElementById('recommendations-list');
+
+            if (issues.length === 0) {
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-3xl';
+                healthIcon.textContent = '✓';
+                healthTitle.textContent = 'Your Mac is running great!';
+                healthSubtitle.textContent = 'All systems are performing normally';
+                healthRecommendations.classList.add('hidden');
+            } else if (issues.length <= 1 && !issues.some(i => i.includes('very') || i.includes('almost') || i.includes('nearly'))) {
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center text-3xl';
+                healthIcon.textContent = '⚡';
+                healthTitle.textContent = 'Your Mac could be faster';
+                healthSubtitle.textContent = 'A few things could use attention';
+                healthRecommendations.classList.remove('hidden');
+            } else {
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center text-3xl';
+                healthIcon.textContent = '⚠️';
+                healthTitle.textContent = 'Your Mac needs attention';
+                healthSubtitle.textContent = 'Some issues may be slowing things down';
+                healthRecommendations.classList.remove('hidden');
+            }
+
+            // Build recommendations
+            if (issues.length > 0) {
+                let recsHTML = '';
+
+                if (cpuUsage >= 70) {
+                    recsHTML += `
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
+                            <span class="text-amber-400">⚡</span>
+                            <p class="text-sm text-zinc-300 flex-1">High CPU usage - some apps may be working hard. Check Activity Monitor for details.</p>
+                        </div>
+                    `;
+                }
+
+                if (memPercent >= 75) {
+                    recsHTML += `
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
+                            <span class="text-amber-400">🧠</span>
+                            <p class="text-sm text-zinc-300 flex-1">Memory is ${memPercent >= 90 ? 'nearly full' : 'getting full'}. Try closing unused apps or run optimization.</p>
+                            <button onclick="runOptimize(); showTab('optimize');" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors">Optimize</button>
+                        </div>
+                    `;
+                }
+
+                if (diskPercent >= 80) {
+                    recsHTML += `
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
+                            <span class="text-amber-400">💾</span>
+                            <p class="text-sm text-zinc-300 flex-1">Storage is ${diskPercent >= 95 ? 'critically low' : 'getting low'}. Free up space by cleaning junk files.</p>
+                            <button onclick="showTab('clean')" class="px-2 py-1 text-xs bg-mole-600 hover:bg-mole-500 rounded transition-colors">Clean Up</button>
+                        </div>
+                    `;
+                }
+
+                recommendationsList.innerHTML = recsHTML;
             }
         }
 
@@ -1064,25 +2033,55 @@
             startStatusStream();
             startLogStream();
 
-            // Start connection monitoring
             monitorConnection();
-            setInterval(monitorConnection, 10000); // Every 10 seconds
+            setInterval(monitorConnection, 10000);
 
-            // Set default paths
+            // First fetch status to get userHomeCache, then load storage breakdown
             fetch('/api/status').then(r => r.json()).then(data => {
                 const home = '/Users/' + data.hostname.split('.')[0];
                 document.getElementById('analyze-path').value = home;
                 document.getElementById('purge-path').value = home;
+                userHomeCache = home;
+
+                // Initial health report update
+                updateHealthReport(data);
+
+                // Now load storage breakdown (needs userHomeCache)
+                loadStorageBreakdown();
             });
         });
     </script>
 
     <style type="text/tailwindcss">
         .tab-btn {
-            @apply flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50;
+            @apply relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50;
         }
         .tab-btn.active {
             @apply bg-mole-600/20 text-mole-400 border border-mole-500/30;
+        }
+        .tab-badge {
+            @apply absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all;
+        }
+        .tab-badge.idle {
+            @apply hidden;
+        }
+        .tab-badge.running {
+            @apply bg-amber-500 animate-pulse;
+        }
+        .tab-badge.complete {
+            @apply bg-emerald-500;
+        }
+        .tab-badge.error {
+            @apply bg-red-500;
+        }
+
+        /* Hide scrollbar for tabs */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </body>
