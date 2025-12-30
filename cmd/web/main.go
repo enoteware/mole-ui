@@ -178,6 +178,8 @@ func main() {
 	http.HandleFunc("/api/volumes", basicAuth(handleListVolumes))
 	http.HandleFunc("/api/volumes/analyze", basicAuth(handleAnalyzeVolume))
 	http.HandleFunc("/api/open-finder", basicAuth(handleOpenFinder))
+	http.HandleFunc("/api/permissions/check", basicAuth(handlePermissionsCheck))
+	http.HandleFunc("/api/permissions/open-settings", basicAuth(handleOpenSystemSettings))
 	http.HandleFunc("/api/optimize", basicAuth(handleOptimize))
 	http.HandleFunc("/api/purge", basicAuth(handlePurge))
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))

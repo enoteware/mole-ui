@@ -91,6 +91,88 @@
     <div class="fixed inset-0 bg-gradient-to-br from-mole-900/20 via-zinc-950 to-zinc-900 pointer-events-none"></div>
     <div class="fixed top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-mole-500/5 to-transparent pointer-events-none blur-3xl"></div>
 
+    <!-- Permissions Setup Modal -->
+    <div id="permissions-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass rounded-3xl p-8 max-w-2xl w-full border border-mole-500/30 shadow-2xl shadow-mole-500/20 animate-slide-up">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-mole-400 to-mole-600 flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg shadow-mole-500/20">
+                    🔐
+                </div>
+                <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-mole-300 to-mole-500 bg-clip-text text-transparent">
+                    Welcome to Mole
+                </h2>
+                <p class="text-zinc-400">Let's set up permissions to unlock all features</p>
+            </div>
+
+            <!-- Permissions Status -->
+            <div class="space-y-3 mb-6">
+                <!-- Full Disk Access -->
+                <div id="permission-fda" class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                        <span class="text-xl">💾</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-zinc-200">Full Disk Access</h3>
+                        <p class="text-xs text-zinc-500">Required to scan all folders and find hidden files</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span id="fda-status" class="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-700 text-zinc-400">
+                            Checking...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Home Directory -->
+                <div id="permission-home" class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <span class="text-xl">🏠</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-zinc-200">Home Folder Access</h3>
+                        <p class="text-xs text-zinc-500">Read your Downloads, Documents, and Desktop</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span id="home-status" class="px-3 py-1 rounded-full text-xs font-semibold bg-zinc-700 text-zinc-400">
+                            Checking...
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div id="permission-instructions" class="hidden mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <h4 class="font-semibold text-amber-300 mb-2 flex items-center gap-2">
+                    <span>⚙️</span>
+                    <span>How to Grant Full Disk Access</span>
+                </h4>
+                <ol class="text-sm text-zinc-300 space-y-2 list-decimal list-inside">
+                    <li>Click "Open System Settings" below</li>
+                    <li>Navigate to <strong>Privacy & Security</strong> → <strong>Full Disk Access</strong></li>
+                    <li>Click the <strong>+</strong> button or toggle on <strong>Mole</strong></li>
+                    <li>Return here and click "Check Again"</li>
+                </ol>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="open-settings-btn" onclick="openSystemSettings()" class="hidden flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                    <span>⚙️</span>
+                    <span>Open System Settings</span>
+                </button>
+                <button id="check-permissions-btn" onclick="checkPermissions()" class="flex-1 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl font-semibold transition-all">
+                    Check Again
+                </button>
+                <button id="continue-anyway-btn" onclick="closePermissionsModal()" class="flex-1 px-6 py-3 bg-mole-600 hover:bg-mole-500 rounded-xl font-semibold transition-all">
+                    Continue
+                </button>
+            </div>
+
+            <p class="text-xs text-zinc-500 text-center mt-4">
+                You can change these permissions anytime in System Settings
+            </p>
+        </div>
+    </div>
+
     <div id="app" class="relative z-10 min-h-screen">
         <!-- Unified Header with Navigation -->
         <header class="sticky top-0 z-40 glass border-b border-zinc-800/50">
@@ -2079,6 +2161,99 @@
             }
         }
 
+        // Permissions Management
+        async function checkPermissions() {
+            try {
+                const response = await fetch('/api/permissions/check');
+                const status = await response.json();
+
+                // Update Full Disk Access status
+                const fdaStatus = document.getElementById('fda-status');
+                const fdaBorder = document.getElementById('permission-fda');
+                if (status.full_disk_access) {
+                    fdaStatus.textContent = '✓ Granted';
+                    fdaStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400';
+                    fdaBorder.className = 'flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-emerald-500/50';
+                } else {
+                    fdaStatus.textContent = '✗ Required';
+                    fdaStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400';
+                    fdaBorder.className = 'flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-amber-500/50';
+                }
+
+                // Update Home Folder Access status
+                const homeStatus = document.getElementById('home-status');
+                const homeBorder = document.getElementById('permission-home');
+                if (status.can_read_home) {
+                    homeStatus.textContent = '✓ Granted';
+                    homeStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400';
+                    homeBorder.className = 'flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-emerald-500/50';
+                } else {
+                    homeStatus.textContent = '✗ Required';
+                    homeStatus.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400';
+                    homeBorder.className = 'flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-amber-500/50';
+                }
+
+                // Show/hide instructions and settings button
+                const instructions = document.getElementById('permission-instructions');
+                const settingsBtn = document.getElementById('open-settings-btn');
+                const continueBtn = document.getElementById('continue-anyway-btn');
+
+                if (!status.full_disk_access) {
+                    instructions.classList.remove('hidden');
+                    settingsBtn.classList.remove('hidden');
+                    continueBtn.textContent = 'Continue Anyway';
+                } else {
+                    instructions.classList.add('hidden');
+                    settingsBtn.classList.add('hidden');
+                    continueBtn.textContent = 'Get Started';
+                }
+
+                return status;
+            } catch (err) {
+                console.error('Failed to check permissions:', err);
+                showToast('Failed to check permissions', 'error');
+            }
+        }
+
+        async function openSystemSettings() {
+            try {
+                const response = await fetch('/api/permissions/open-settings');
+                if (response.ok) {
+                    showToast('Opening System Settings...', 'info');
+                    // Show a reminder to check again after granting permissions
+                    setTimeout(() => {
+                        showToast('After granting access, click "Check Again"', 'info');
+                    }, 2000);
+                } else {
+                    throw new Error('Failed to open System Settings');
+                }
+            } catch (err) {
+                console.error('Failed to open System Settings:', err);
+                showToast('Failed to open System Settings', 'error');
+            }
+        }
+
+        function showPermissionsModal() {
+            const modal = document.getElementById('permissions-modal');
+            modal.classList.remove('hidden');
+            checkPermissions();
+        }
+
+        function closePermissionsModal() {
+            const modal = document.getElementById('permissions-modal');
+            modal.classList.add('hidden');
+            // Save that user has seen the modal
+            localStorage.setItem('mole_permissions_seen', 'true');
+        }
+
+        function checkFirstRun() {
+            const hasSeenPermissions = localStorage.getItem('mole_permissions_seen');
+            if (!hasSeenPermissions) {
+                // Show permissions modal on first run
+                setTimeout(() => showPermissionsModal(), 500);
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function () {
             startStatusStream();
@@ -2099,6 +2274,9 @@
 
                 // Now load storage breakdown (needs userHomeCache)
                 loadStorageBreakdown();
+
+                // Check if this is first run and show permissions modal
+                checkFirstRun();
             });
         });
     </script>
