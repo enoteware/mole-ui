@@ -1,0 +1,72 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build artifacts
+Mole.app/
+Mole-Installer.dmg
+dmg-build/
+dist/
+build/
+
+# Logs
+*.log
+deploy/mole-web.log
+deploy/electron-test.log
+
+# PID files
+*.pid
+deploy/mole-web.pid
+
+# Node modules
+node_modules/
+electron-app/node_modules/
+
+# npm
+package-lock.json
+electron-app/package-lock.json
+
+# Environment files
+.env
+deploy/.env
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+test-electron.js
+test-electron2.js
+
+# Go
+go.sum
+vendor/
+
+# Temp files
+tmp/
+temp/

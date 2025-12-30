@@ -1,0 +1,43 @@
+# Mole Web UI - Docker Compose
+#
+# Option 1: Run in container (limited - system metrics are from container)
+# Option 2: Run native on Mac Mini (recommended - full functionality)
+#
+# For production on Mac Mini, use the native deployment: ./deploy/start.sh
+
+services:
+  mole-web:
+    build: .
+    container_name: mole-web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Authentication (REQUIRED for network access)
+      - MOLE_AUTH_USER=${MOLE_AUTH_USER:-admin}
+      - MOLE_AUTH_PASS=${MOLE_AUTH_PASS:-changeme}
+      # Server config
+      - MOLE_PORT=8080
+      - MOLE_HOST=0.0.0.0
+      - TZ=${TZ:-America/New_York}
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    # For macOS host metrics, run with host network (not recommended for security)
+    # network_mode: host
+
+    # Optional: Traefik reverse proxy with HTTPS
+    # traefik:
+    #   image: traefik:v2.10
+    #   command:
+    #     - "--api.insecure=true"
+    #     - "--providers.docker=true"
+    #     - "--entrypoints.web.address=:80"
+    #     - "--entrypoints.websecure.address=:443"
+    #   ports:
+    #     - "80:80"
+    #     - "443:443"
+    #   volumes:
+    #     - /var/run/docker.sock:/var/run/docker.sock:ro

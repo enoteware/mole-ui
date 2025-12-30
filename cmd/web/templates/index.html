@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mole - System Cleaner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mole: {
+                            50: '#faf5f0',
+                            100: '#f0e6d9',
+                            200: '#e0ccb3',
+                            300: '#cda982',
+                            400: '#bc8a5c',
+                            500: '#a87343',
+                            600: '#8f5d38',
+                            700: '#764a30',
+                            800: '#623d2c',
+                            900: '#523427',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 2s ease-in-out infinite;
+        }
+
+        .glass {
+            backdrop-filter: blur(12px);
+            background: rgba(30, 30, 30, 0.8);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 min-h-screen text-zinc-100">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">🐭</div>
+                <div>
+                    <h1
+                        class="text-3xl font-bold bg-gradient-to-r from-mole-400 to-mole-300 bg-clip-text text-transparent">
+                        Mole</h1>
+                    <p class="text-zinc-400 text-sm">System Cleaner & Optimizer</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-zinc-500">
+                <span id="hostname">-</span>
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" id="connection-indicator" title="Connected"></span>
+                <span id="latency" class="text-xs text-zinc-600">-</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex gap-2 mb-8 overflow-x-auto pb-2">
+            <button onclick="showTab('status')" class="tab-btn active" data-tab="status">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                Status
+            </button>
+            <button onclick="showTab('clean')" class="tab-btn" data-tab="clean">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+                Clean
+            </button>
+            <button onclick="showTab('uninstall')" class="tab-btn" data-tab="uninstall">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+                Uninstall
+            </button>
+            <button onclick="showTab('analyze')" class="tab-btn" data-tab="analyze">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4">
+                    </path>
+                </svg>
+                Analyze
+            </button>
+            <button onclick="showTab('optimize')" class="tab-btn" data-tab="optimize">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Optimize
+            </button>
+            <button onclick="showTab('purge')" class="tab-btn" data-tab="purge">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                </svg>
+                Purge
+            </button>
+            <button onclick="showTab('install')" class="tab-btn" data-tab="install">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Install
+            </button>
+        </nav>
+
+        <!-- Tab Contents -->
+        <main>
+            <!-- Status Tab -->
+            <section id="tab-status" class="tab-content">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                    <!-- CPU Card -->
+                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-sm font-medium">CPU</span>
+                            <span id="cpu-usage" class="text-xl font-bold text-mole-400">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
+                            <div id="cpu-bar"
+                                class="bg-gradient-to-r from-mole-500 to-mole-400 h-2 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <p id="cpu-model" class="text-xs text-zinc-500 mt-2 truncate">-</p>
+                    </div>
+
+                    <!-- Memory Card -->
+                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-sm font-medium">Memory</span>
+                            <span id="mem-usage" class="text-xl font-bold text-blue-400">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
+                            <div id="mem-bar"
+                                class="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <p id="mem-detail" class="text-xs text-zinc-500 mt-2">-</p>
+                    </div>
+
+                    <!-- Disk Card -->
+                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-sm font-medium">Disk</span>
+                            <span id="disk-usage" class="text-xl font-bold text-emerald-400">--%</span>
+                        </div>
+                        <div class="w-full bg-zinc-700/50 rounded-full h-2">
+                            <div id="disk-bar"
+                                class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <p id="disk-detail" class="text-xs text-zinc-500 mt-2">-</p>
+                    </div>
+
+                    <!-- Network Card -->
+                    <div class="glass rounded-2xl p-5 border border-zinc-700/50">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-sm font-medium">Network</span>
+                            <span class="text-xl font-bold text-purple-400">↑↓</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <div>
+                                <span class="text-zinc-500">↑</span>
+                                <span id="net-sent" class="text-zinc-300">-</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500">↓</span>
+                                <span id="net-recv" class="text-zinc-300">-</span>
+                            </div>
+                        </div>
+                        <p id="uptime" class="text-xs text-zinc-500 mt-2">Uptime: -</p>
+                    </div>
+                </div>
+
+                <!-- System Info -->
+                <div class="glass rounded-2xl p-5 border border-zinc-700/50">
+                    <h3 class="text-lg font-semibold mb-4 text-zinc-200">System Information</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <span class="text-zinc-500">OS</span>
+                            <p id="os-info" class="text-zinc-300">-</p>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">CPU Cores</span>
+                            <p id="cpu-cores" class="text-zinc-300">-</p>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">Total RAM</span>
+                            <p id="total-ram" class="text-zinc-300">-</p>
+                        </div>
+                        <div>
+                            <span class="text-zinc-500">Total Disk</span>
+                            <p id="total-disk" class="text-zinc-300">-</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clean Tab -->
+            <section id="tab-clean" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <h3 class="text-xl font-semibold mb-4">System Cleanup</h3>
+                    <p class="text-zinc-400 mb-6">Remove cache files, logs, browser data, and other temporary files to
+                        free up disk space.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" checked
+                                class="clean-category rounded text-mole-500 focus:ring-mole-500" value="cache">
+                            <div>
+                                <span class="font-medium">System Cache</span>
+                                <p class="text-xs text-zinc-500">System and user caches</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" checked
+                                class="clean-category rounded text-mole-500 focus:ring-mole-500" value="logs">
+                            <div>
+                                <span class="font-medium">Logs</span>
+                                <p class="text-xs text-zinc-500">System and app logs</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
+                                value="browser">
+                            <div>
+                                <span class="font-medium">Browser Data</span>
+                                <p class="text-xs text-zinc-500">Cache, cookies, history</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
+                                value="downloads">
+                            <div>
+                                <span class="font-medium">Downloads</span>
+                                <p class="text-xs text-zinc-500">Old downloaded files</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
+                                value="trash">
+                            <div>
+                                <span class="font-medium">Trash</span>
+                                <p class="text-xs text-zinc-500">Empty trash bins</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-mole-500/50 transition-colors">
+                            <input type="checkbox" class="clean-category rounded text-mole-500 focus:ring-mole-500"
+                                value="xcode">
+                            <div>
+                                <span class="font-medium">Xcode</span>
+                                <p class="text-xs text-zinc-500">Derived data & archives</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button onclick="runClean()"
+                            class="px-6 py-3 bg-gradient-to-r from-mole-600 to-mole-500 hover:from-mole-500 hover:to-mole-400 rounded-xl font-medium transition-all transform hover:scale-105">
+                            🧹 Clean Now
+                        </button>
+                        <button onclick="previewClean()"
+                            class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl font-medium transition-colors">
+                            Preview
+                        </button>
+                    </div>
+
+                    <div id="clean-result" class="mt-6 hidden">
+                        <pre
+                            class="bg-zinc-900 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300"></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Uninstall Tab -->
+            <section id="tab-uninstall" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">App Uninstaller</h3>
+                        <button onclick="loadApps()" class="text-sm text-mole-400 hover:text-mole-300">↻
+                            Refresh</button>
+                    </div>
+                    <p class="text-zinc-400 mb-6">Remove applications and their associated files completely.</p>
+
+                    <div class="mb-4">
+                        <input type="text" id="app-search" placeholder="Search apps..."
+                            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none"
+                            oninput="filterApps()">
+                    </div>
+
+                    <div id="apps-list" class="space-y-2 max-h-96 overflow-y-auto mb-4">
+                        <div class="text-zinc-500 text-center py-8">Loading applications...</div>
+                    </div>
+
+                    <button onclick="uninstallSelected()"
+                        class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-medium transition-colors disabled:opacity-50"
+                        id="uninstall-btn" disabled>
+                        🗑️ Uninstall Selected
+                    </button>
+                </div>
+            </section>
+
+            <!-- Analyze Tab -->
+            <section id="tab-analyze" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <h3 class="text-xl font-semibold mb-4">Disk Analyzer</h3>
+                    <p class="text-zinc-400 mb-6">Explore disk usage and find large files/folders.</p>
+
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="analyze-path" value="" placeholder="Path to analyze"
+                            class="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none">
+                        <button onclick="analyzeDisk()"
+                            class="px-6 py-2 bg-mole-600 hover:bg-mole-500 rounded-xl font-medium transition-colors">
+                            Scan
+                        </button>
+                    </div>
+
+                    <div id="breadcrumb" class="flex items-center gap-2 text-sm mb-4 flex-wrap"></div>
+
+                    <div id="analyze-result" class="space-y-1 max-h-[500px] overflow-y-auto">
+                        <div class="text-zinc-500 text-center py-8">Enter a path and click Scan to analyze</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Optimize Tab -->
+            <section id="tab-optimize" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <h3 class="text-xl font-semibold mb-4">System Optimization</h3>
+                    <p class="text-zinc-400 mb-6">Rebuild system caches, refresh services, and optimize performance.</p>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                            <div class="text-2xl">⚡</div>
+                            <div>
+                                <h4 class="font-medium">Rebuild Caches</h4>
+                                <p class="text-sm text-zinc-500">Rebuild system caches for better performance</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                            <div class="text-2xl">🔄</div>
+                            <div>
+                                <h4 class="font-medium">Refresh Services</h4>
+                                <p class="text-sm text-zinc-500">Restart system services to free resources</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                            <div class="text-2xl">🧹</div>
+                            <div>
+                                <h4 class="font-medium">Clear Temporary Files</h4>
+                                <p class="text-sm text-zinc-500">Remove temporary system files</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="runOptimize()"
+                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl font-medium transition-all transform hover:scale-105">
+                        ⚡ Optimize Now
+                    </button>
+
+                    <div id="optimize-result" class="mt-6 hidden">
+                        <pre
+                            class="bg-zinc-900 rounded-xl p-4 text-sm overflow-x-auto max-h-64 overflow-y-auto text-zinc-300"></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Purge Tab -->
+            <section id="tab-purge" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <h3 class="text-xl font-semibold mb-4">Project Artifact Purge</h3>
+                    <p class="text-zinc-400 mb-6">Find and remove old node_modules, build folders, and other development
+                        artifacts.</p>
+
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="purge-path" value="" placeholder="Path to scan"
+                            class="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none">
+                        <button onclick="scanPurge()"
+                            class="px-6 py-2 bg-mole-600 hover:bg-mole-500 rounded-xl font-medium transition-colors">
+                            Scan
+                        </button>
+                    </div>
+
+                    <div id="purge-list" class="space-y-2 max-h-96 overflow-y-auto mb-4">
+                        <div class="text-zinc-500 text-center py-8">Enter a path and click Scan to find artifacts</div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span id="purge-total" class="text-zinc-400">Select items to purge</span>
+                        <button onclick="purgeSelected()"
+                            class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-medium transition-colors disabled:opacity-50"
+                            id="purge-btn" disabled>
+                            🗑️ Purge Selected
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Install Tab -->
+            <section id="tab-install" class="tab-content hidden">
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50 mb-6">
+                    <h3 class="text-xl font-semibold mb-4">📦 Install Mole on Another Mac</h3>
+                    <p class="text-zinc-400 mb-6">Use this installer to quickly set up Mole Web UI on other Macs on your network.</p>
+
+                    <div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 mb-6">
+                        <h4 class="text-lg font-semibold mb-3 text-mole-400">One-Line Installer</h4>
+                        <p class="text-zinc-400 text-sm mb-4">Run one of these commands on any Mac to install and start Mole:</p>
+
+                        <div class="space-y-4">
+                            <!-- Hostname version -->
+                            <div>
+                                <p class="text-xs text-zinc-500 mb-2">Using .local hostname (Bonjour):</p>
+                                <div class="relative">
+                                    <pre class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 overflow-x-auto text-sm"><code id="install-command-hostname">curl -fsSL http://<span id="server-hostname">-</span>:8081/install.sh | bash</code></pre>
+                                    <button onclick="copyInstallCommand('hostname')"
+                                        class="absolute top-2 right-2 px-3 py-1 bg-mole-600 hover:bg-mole-500 rounded text-xs transition-colors">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- IP version -->
+                            <div>
+                                <p class="text-xs text-zinc-500 mb-2">Using IP address (most reliable):</p>
+                                <div class="relative">
+                                    <pre class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 overflow-x-auto text-sm"><code id="install-command-ip">curl -fsSL http://<span id="server-ip">-</span>:8081/install.sh | bash</code></pre>
+                                    <button onclick="copyInstallCommand('ip')"
+                                        class="absolute top-2 right-2 px-3 py-1 bg-mole-600 hover:bg-mole-500 rounded text-xs transition-colors">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold mb-3 text-mole-400">What It Does</h4>
+                        <ul class="space-y-2 text-zinc-400 text-sm">
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-1">✓</span>
+                                <span>Installs Go (via Homebrew) if not already installed</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-1">✓</span>
+                                <span>Downloads Mole from GitHub to <code class="text-mole-400">~/.mole</code></span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-1">✓</span>
+                                <span>Builds the web server binary</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-1">✓</span>
+                                <span>Creates configuration with no authentication (local network only)</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-green-500 mt-1">✓</span>
+                                <span>Starts the Mole Web UI on port 8081</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
+                        <div class="flex gap-3">
+                            <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-blue-300 font-medium mb-1">Network Access Required</p>
+                                <p class="text-blue-200/70">Make sure the Mac you're installing on can access this server. Each Mac will run its own instance of Mole to manage itself.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">⚙️ Managing Mole After Installation</h3>
+
+                    <div class="space-y-4 text-sm">
+                        <div>
+                            <h4 class="text-mole-400 font-medium mb-2">Access Your Dashboard:</h4>
+                            <p class="text-zinc-400 mb-2">After installation, open in your browser:</p>
+                            <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs text-green-400">http://localhost:8081</code>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-mole-400 font-medium mb-2">Start Server:</h4>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cd ~/.mole && ./deploy/start.sh</code>
+                            </div>
+
+                            <div>
+                                <h4 class="text-mole-400 font-medium mb-2">Stop Server:</h4>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cd ~/.mole && ./deploy/stop.sh</code>
+                            </div>
+
+                            <div>
+                                <h4 class="text-mole-400 font-medium mb-2">Check Status:</h4>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">ps aux | grep web-go</code>
+                            </div>
+
+                            <div>
+                                <h4 class="text-mole-400 font-medium mb-2">View Logs:</h4>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">tail -f ~/.mole/deploy/mole-web.log</code>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-amber-900/20 border border-amber-700/50 rounded-lg">
+                            <p class="text-amber-200/80 text-xs">
+                                💡 <strong>Tip:</strong> The installer starts the server automatically. It will stop when you restart your Mac. Use the commands above to start it again.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl p-6 border border-zinc-700/50">
+                    <h3 class="text-lg font-semibold mb-4">Manual Installation</h3>
+                    <p class="text-zinc-400 mb-4">If you prefer to install manually:</p>
+
+                    <ol class="space-y-3 text-zinc-400 text-sm">
+                        <li class="flex gap-3">
+                            <span class="text-mole-400 font-mono">1.</span>
+                            <div>
+                                <p class="mb-1">Download the installer script:</p>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">curl -fsSL http://<span id="server-hostname-2">-</span>:8081/install.sh -o install-mole.sh</code>
+                            </div>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-mole-400 font-mono">2.</span>
+                            <div>
+                                <p class="mb-1">Review the script (optional but recommended):</p>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">cat install-mole.sh</code>
+                            </div>
+                        </li>
+                        <li class="flex gap-3">
+                            <span class="text-mole-400 font-mono">3.</span>
+                            <div>
+                                <p class="mb-1">Run the installer:</p>
+                                <code class="block bg-zinc-900 border border-zinc-700 rounded p-2 text-xs">bash install-mole.sh</code>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+
+        <!-- Log Terminal (Fixed at bottom) -->
+        <div id="log-terminal"
+            class="fixed bottom-4 right-4 w-96 h-64 glass rounded-2xl border border-zinc-700/50 shadow-2xl flex flex-col hidden z-50 transition-all duration-300 transform translate-y-0 translate-x-0">
+            <div
+                class="flex items-center justify-between px-4 py-2 border-b border-zinc-700/50 bg-zinc-800/50 rounded-t-2xl">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                    <span class="text-xs font-semibold text-zinc-300">Live Logs</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearLogs()" class="text-zinc-500 hover:text-zinc-300 text-xs">Clear</button>
+                    <button onclick="toggleLogs()" class="text-zinc-500 hover:text-zinc-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="log-content" class="flex-1 p-3 font-mono text-[10px] overflow-y-auto text-zinc-400 space-y-1">
+                <div class="text-zinc-600">-- Logs will appear here --</div>
+            </div>
+        </div>
+
+        <!-- Log Toggle Button -->
+        <button id="log-toggle" onclick="toggleLogs()"
+            class="fixed bottom-6 right-6 p-3 bg-zinc-800 hover:bg-mole-600 text-white rounded-full shadow-lg z-40 transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(name) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.remove('hidden');
+            document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+
+            // Load data for certain tabs
+            if (name === 'uninstall') loadApps();
+        }
+
+        // Format bytes helper
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600',
+                warning: 'bg-yellow-600'
+            };
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-xl shadow-lg z-50 ${colors[type]} text-white transform transition-all duration-300`;
+            toast.textContent = message;
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            }, 10);
+
+            // Animate out and remove
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Connection monitoring
+        let connectionQuality = 'excellent';
+
+        function monitorConnection() {
+            const pingStart = Date.now();
+            fetch('/health')
+                .then(response => {
+                    const latency = Date.now() - pingStart;
+                    if (latency < 100) connectionQuality = 'excellent';
+                    else if (latency < 300) connectionQuality = 'good';
+                    else if (latency < 1000) connectionQuality = 'poor';
+                    else connectionQuality = 'offline';
+                    updateConnectionIndicator(latency);
+                })
+                .catch(() => {
+                    connectionQuality = 'offline';
+                    updateConnectionIndicator(null);
+                });
+        }
+
+        function updateConnectionIndicator(latency) {
+            const indicator = document.getElementById('connection-indicator');
+            const latencyEl = document.getElementById('latency');
+            const colors = {
+                excellent: 'bg-green-500',
+                good: 'bg-yellow-500',
+                poor: 'bg-orange-500',
+                offline: 'bg-red-500 animate-pulse'
+            };
+
+            if (indicator) {
+                indicator.className = `w-2 h-2 rounded-full ${colors[connectionQuality]}`;
+                if (latency !== null) {
+                    indicator.title = `Latency: ${latency}ms (${connectionQuality})`;
+                    latencyEl.textContent = `${latency}ms`;
+                    latencyEl.className = `text-xs ${latency < 100 ? 'text-green-600' : latency < 300 ? 'text-yellow-600' : 'text-orange-600'}`;
+                } else {
+                    indicator.title = 'Connection lost';
+                    latencyEl.textContent = 'offline';
+                    latencyEl.className = 'text-xs text-red-600';
+                }
+            }
+        }
+
+        // Status streaming
+        let eventSource;
+        function startStatusStream() {
+            if (eventSource) eventSource.close();
+
+            eventSource = new EventSource('/api/status/stream');
+
+            eventSource.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                updateStatus(data);
+            };
+
+            eventSource.onerror = function() {
+                console.warn('Status stream disconnected, reconnecting...');
+                showToast('Connection lost, reconnecting...', 'warning');
+                setTimeout(() => {
+                    startStatusStream();
+                }, 5000);
+            };
+
+            eventSource.onopen = function() {
+                connectionQuality = 'excellent';
+                updateConnectionIndicator(50);
+            };
+        }
+
+        // Log streaming
+        let logEventSource;
+        function startLogStream() {
+            if (logEventSource) logEventSource.close();
+            logEventSource = new EventSource('/api/logs');
+            logEventSource.onmessage = function (e) {
+                addLog(e.data);
+            };
+            logEventSource.onerror = function () {
+                setTimeout(startLogStream, 5000);
+            };
+        }
+
+        function addLog(msg) {
+            const content = document.getElementById('log-content');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            content.appendChild(entry);
+            content.scrollTop = content.scrollHeight;
+
+            // Show terminal if hidden and message is relevant
+            if (document.getElementById('log-terminal').classList.contains('hidden') && msg.includes('mole')) {
+                toggleLogs();
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('log-content').innerHTML = '<div class="text-zinc-600">-- Logs cleared --</div>';
+        }
+
+        function toggleLogs() {
+            const term = document.getElementById('log-terminal');
+            const btn = document.getElementById('log-toggle');
+            term.classList.toggle('hidden');
+            btn.classList.toggle('hidden');
+        }
+
+        // Copy install command
+        function copyInstallCommand(type) {
+            const commandId = type === 'hostname' ? 'install-command-hostname' : 'install-command-ip';
+            const commandText = document.getElementById(commandId).textContent;
+            navigator.clipboard.writeText(commandText).then(() => {
+                showToast('Install command copied to clipboard!', 'success');
+            }).catch(err => {
+                showToast('Failed to copy: ' + err.message, 'error');
+            });
+        }
+
+        function updateStatus(data) {
+            // Header
+            document.getElementById('hostname').textContent = data.hostname;
+
+            // Update install command hostname and IP
+            const shortHostname = data.hostname.split('.')[0];
+            const hostnameEl = document.getElementById('server-hostname');
+            const hostnameEl2 = document.getElementById('server-hostname-2');
+            const ipEl = document.getElementById('server-ip');
+
+            if (hostnameEl) hostnameEl.textContent = shortHostname + '.local';
+            if (hostnameEl2) hostnameEl2.textContent = shortHostname + '.local';
+            if (ipEl && data.local_ip) ipEl.textContent = data.local_ip;
+
+            // CPU
+            document.getElementById('cpu-usage').textContent = data.cpu.usage.toFixed(1) + '%';
+            document.getElementById('cpu-bar').style.width = data.cpu.usage + '%';
+            document.getElementById('cpu-model').textContent = data.cpu.model;
+            document.getElementById('cpu-cores').textContent = data.cpu.cores + ' cores';
+
+            // Memory
+            document.getElementById('mem-usage').textContent = data.memory.percent.toFixed(1) + '%';
+            document.getElementById('mem-bar').style.width = data.memory.percent + '%';
+            document.getElementById('mem-detail').textContent = formatBytes(data.memory.used) + ' / ' + formatBytes(data.memory.total);
+            document.getElementById('total-ram').textContent = formatBytes(data.memory.total);
+
+            // Disk
+            document.getElementById('disk-usage').textContent = data.disk.percent.toFixed(1) + '%';
+            document.getElementById('disk-bar').style.width = data.disk.percent + '%';
+            document.getElementById('disk-detail').textContent = formatBytes(data.disk.free) + ' free';
+            document.getElementById('total-disk').textContent = formatBytes(data.disk.total);
+
+            // Network
+            document.getElementById('net-sent').textContent = formatBytes(data.network.bytes_sent);
+            document.getElementById('net-recv').textContent = formatBytes(data.network.bytes_recv);
+
+            // System info
+            document.getElementById('os-info').textContent = data.os;
+            document.getElementById('uptime').textContent = 'Uptime: ' + data.uptime;
+        }
+
+        // Clean functions
+        async function previewClean() {
+            const result = document.getElementById('clean-result');
+            result.classList.remove('hidden');
+            result.querySelector('pre').textContent = 'Scanning...';
+
+            const response = await fetch('/api/clean/preview');
+            const data = await response.json();
+            result.querySelector('pre').textContent = data.output || data.message;
+        }
+
+        async function runClean() {
+            if (!confirm('Are you sure you want to clean the selected categories?')) return;
+
+            const result = document.getElementById('clean-result');
+            result.classList.remove('hidden');
+            result.querySelector('pre').textContent = 'Cleaning...';
+
+            try {
+                const response = await fetch('/api/clean', { method: 'POST' });
+                if (!response.ok) throw new Error(`Server error: ${response.status} ${response.statusText}`);
+
+                const data = await response.json();
+                if (!data.success) {
+                    showToast(`Cleanup failed: ${data.message}`, 'error');
+                } else {
+                    const cleaned = formatBytes(data.cleaned_bytes || 0);
+                    showToast(`Successfully cleaned ${cleaned}!`, 'success');
+                }
+                result.querySelector('pre').textContent = data.output || data.message;
+            } catch (err) {
+                showToast(`Network error: ${err.message}`, 'error');
+                console.error('Clean operation failed:', err);
+            }
+        }
+
+        // App uninstall functions
+        let allApps = [];
+        async function loadApps() {
+            const list = document.getElementById('apps-list');
+            // Skeleton loader
+            list.innerHTML = `<div class="space-y-2 animate-pulse">
+                ${[1,2,3,4,5].map(() => `
+                    <div class="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+                        <div class="h-4 bg-zinc-700 rounded w-3/4"></div>
+                        <div class="h-4 bg-zinc-700 rounded w-1/4"></div>
+                    </div>
+                `).join('')}
+            </div>`;
+
+            try {
+                const response = await fetch('/api/uninstall/apps');
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                allApps = await response.json();
+                renderApps(allApps);
+            } catch (err) {
+                showToast(`Failed to load applications: ${err.message}`, 'error');
+                list.innerHTML = '<div class="text-red-500 text-center py-8">Failed to load applications</div>';
+            }
+        }
+
+        function renderApps(apps) {
+            const list = document.getElementById('apps-list');
+            if (!apps || apps.length === 0) {
+                list.innerHTML = '<div class="text-zinc-500 text-center py-8">No applications found</div>';
+                return;
+            }
+
+            list.innerHTML = apps.map(app => `
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 transition-colors">
+                    <input type="checkbox" class="app-checkbox rounded text-red-500 focus:ring-red-500" value="${app.path}" onchange="updateUninstallBtn()">
+                    <div class="flex-1 min-w-0">
+                        <span class="font-medium truncate block">${app.name}</span>
+                        <span class="text-xs text-zinc-500">${app.size_human}</span>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        function filterApps() {
+            const query = document.getElementById('app-search').value.toLowerCase();
+            const filtered = allApps.filter(app => app.name.toLowerCase().includes(query));
+            renderApps(filtered);
+        }
+
+        function updateUninstallBtn() {
+            const checked = document.querySelectorAll('.app-checkbox:checked').length;
+            document.getElementById('uninstall-btn').disabled = checked === 0;
+        }
+
+        async function uninstallSelected() {
+            const apps = [...document.querySelectorAll('.app-checkbox:checked')].map(el => el.value);
+            if (apps.length === 0) return;
+            if (!confirm(`Are you sure you want to uninstall ${apps.length} app(s)?`)) return;
+
+            try {
+                const response = await fetch('/api/uninstall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apps })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+                const data = await response.json();
+                showToast(`Successfully uninstalled ${apps.length} app(s)!`, 'success');
+                loadApps();
+            } catch (err) {
+                showToast(`Uninstall failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Disk analyzer functions
+        async function analyzeDisk(path) {
+            const pathInput = document.getElementById('analyze-path');
+            const targetPath = path || pathInput.value || (pathInput.value = '~'.replace('~', '/Users/' + document.getElementById('hostname').textContent.split('.')[0]));
+
+            const result = document.getElementById('analyze-result');
+            result.innerHTML = '<div class="text-zinc-500 text-center py-8">Scanning...</div>';
+
+            const response = await fetch('/api/analyze?path=' + encodeURIComponent(targetPath));
+            const entries = await response.json();
+
+            // Update breadcrumb
+            updateBreadcrumb(targetPath);
+
+            // Render entries
+            if (!entries || entries.length === 0) {
+                result.innerHTML = '<div class="text-zinc-500 text-center py-8">No items found</div>';
+                return;
+            }
+
+            result.innerHTML = entries.map(entry => `
+                <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer transition-colors" onclick="${entry.is_dir ? `analyzeDisk('${entry.path}')` : ''}">
+                    <span class="text-lg">${entry.is_dir ? '📁' : '📄'}</span>
+                    <div class="flex-1 min-w-0">
+                        <span class="truncate block">${entry.name}</span>
+                    </div>
+                    <span class="text-sm text-zinc-400 font-mono">${entry.size_human}</span>
+                    <div class="w-24 bg-zinc-700/50 rounded-full h-1.5">
+                        <div class="bg-mole-500 h-1.5 rounded-full" style="width: ${Math.min(100, (entry.size / (entries[0]?.size || 1)) * 100)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateBreadcrumb(path) {
+            const parts = path.split('/').filter(Boolean);
+            const breadcrumb = document.getElementById('breadcrumb');
+            let currentPath = '';
+
+            breadcrumb.innerHTML = '<span class="cursor-pointer hover:text-mole-400" onclick="analyzeDisk(\'/\')">/</span>';
+            parts.forEach((part, i) => {
+                currentPath += '/' + part;
+                const p = currentPath;
+                breadcrumb.innerHTML += `<span class="text-zinc-600">/</span><span class="cursor-pointer hover:text-mole-400" onclick="analyzeDisk('${p}')">${part}</span>`;
+            });
+        }
+
+        // Optimize function
+        async function runOptimize() {
+
+            const result = document.getElementById('optimize-result');
+            result.classList.remove('hidden');
+            result.querySelector('pre').textContent = 'Optimizing...';
+
+            const response = await fetch('/api/optimize', { method: 'POST' });
+            const data = await response.json();
+            result.querySelector('pre').textContent = data.output || data.message;
+        }
+
+        // Purge functions
+        let purgeItems = [];
+        async function scanPurge() {
+            const path = document.getElementById('purge-path').value || '/Users';
+            const list = document.getElementById('purge-list');
+            list.innerHTML = '<div class="text-zinc-500 text-center py-8">Scanning...</div>';
+
+            const response = await fetch('/api/purge/scan?path=' + encodeURIComponent(path));
+            purgeItems = await response.json();
+
+            if (!purgeItems || purgeItems.length === 0) {
+                list.innerHTML = '<div class="text-zinc-500 text-center py-8">No artifacts found</div>';
+                return;
+            }
+
+            list.innerHTML = purgeItems.map((item, i) => `
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 cursor-pointer hover:border-zinc-600 transition-colors">
+                    <input type="checkbox" class="purge-checkbox rounded text-red-500 focus:ring-red-500" value="${i}" onchange="updatePurgeTotal()">
+                    <span class="px-2 py-0.5 text-xs rounded bg-zinc-700 text-zinc-300">${item.type}</span>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-sm truncate block text-zinc-300">${item.path}</span>
+                    </div>
+                    <span class="text-sm text-zinc-400 font-mono">${item.size_human}</span>
+                </label>
+            `).join('');
+
+            updatePurgeTotal();
+        }
+
+        function updatePurgeTotal() {
+            const checked = [...document.querySelectorAll('.purge-checkbox:checked')].map(el => parseInt(el.value));
+            const total = checked.reduce((sum, i) => sum + (purgeItems[i]?.size || 0), 0);
+            document.getElementById('purge-total').textContent = checked.length > 0
+                ? `${checked.length} items selected (${formatBytes(total)})`
+                : 'Select items to purge';
+            document.getElementById('purge-btn').disabled = checked.length === 0;
+        }
+
+        async function purgeSelected() {
+            const indices = [...document.querySelectorAll('.purge-checkbox:checked')].map(el => parseInt(el.value));
+            const paths = indices.map(i => purgeItems[i].path);
+
+            if (paths.length === 0) return;
+            if (!confirm(`Are you sure you want to delete ${paths.length} item(s)?`)) return;
+
+            try {
+                const response = await fetch('/api/purge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paths })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+                await response.json();
+                showToast(`Successfully purged ${paths.length} item(s)!`, 'success');
+                scanPurge();
+            } catch (err) {
+                showToast(`Purge failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            startStatusStream();
+            startLogStream();
+
+            // Start connection monitoring
+            monitorConnection();
+            setInterval(monitorConnection, 10000); // Every 10 seconds
+
+            // Set default paths
+            fetch('/api/status').then(r => r.json()).then(data => {
+                const home = '/Users/' + data.hostname.split('.')[0];
+                document.getElementById('analyze-path').value = home;
+                document.getElementById('purge-path').value = home;
+            });
+        });
+    </script>
+
+    <style type="text/tailwindcss">
+        .tab-btn {
+            @apply flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50;
+        }
+        .tab-btn.active {
+            @apply bg-mole-600/20 text-mole-400 border border-mole-500/30;
+        }
+    </style>
+</body>
+
+</html>
