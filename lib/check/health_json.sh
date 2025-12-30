@@ -16,12 +16,12 @@ get_memory_info() {
         local mem_total_kb mem_available_kb
         mem_total_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
         mem_available_kb=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
-        
+
         local used_kb=$((mem_total_kb - mem_available_kb))
-        
+
         local used_gb=$(awk "BEGIN {printf \"%.2f\", $used_kb / (1024*1024)}")
         local total_gb=$(awk "BEGIN {printf \"%.2f\", $mem_total_kb / (1024*1024)}")
-        
+
         echo "$used_gb $total_gb"
         return
     fi

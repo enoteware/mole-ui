@@ -45,7 +45,7 @@ fi
 # Stop existing process if running
 if [[ -f "$PID_FILE" ]]; then
     OLD_PID=$(cat "$PID_FILE")
-    if kill -0 "$OLD_PID" 2>/dev/null; then
+    if kill -0 "$OLD_PID" 2> /dev/null; then
         echo "Stopping existing server (PID: $OLD_PID)..."
         kill "$OLD_PID"
         sleep 1
@@ -66,11 +66,11 @@ echo $! > "$PID_FILE"
 
 sleep 1
 
-if kill -0 $(cat "$PID_FILE") 2>/dev/null; then
+if kill -0 $(cat "$PID_FILE") 2> /dev/null; then
     echo "✅ Server started (PID: $(cat "$PID_FILE"))"
 
     # Get local IP
-    LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || echo "localhost")
+    LOCAL_IP=$(ipconfig getifaddr en0 2> /dev/null || echo "localhost")
     echo ""
     echo "   Access the dashboard at:"
     echo "   http://${LOCAL_IP}:${MOLE_PORT}"

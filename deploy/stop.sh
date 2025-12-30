@@ -11,7 +11,7 @@ fi
 
 PID=$(cat "$PID_FILE")
 
-if kill -0 "$PID" 2>/dev/null; then
+if kill -0 "$PID" 2> /dev/null; then
     echo "Stopping Mole Web UI (PID: $PID)..."
     kill "$PID"
     rm -f "$PID_FILE"

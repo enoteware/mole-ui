@@ -35,13 +35,13 @@ var staticFiles embed.FS
 var templateFiles embed.FS
 
 var (
-	moleDir     string
-	Version     = "dev"
-	port        = flag.Int("port", 8080, "Port to run the server on")
-	hostAddr    = flag.String("host", "", "Host to bind to (default: localhost, use 0.0.0.0 for all interfaces)")
-	openBrowser = flag.Bool("open", true, "Open browser on start")
-	authUser    string
-	authPass    string
+	moleDir      string
+	Version      = "dev"
+	port         = flag.Int("port", 8080, "Port to run the server on")
+	hostAddr     = flag.String("host", "", "Host to bind to (default: localhost, use 0.0.0.0 for all interfaces)")
+	openBrowser  = flag.Bool("open", true, "Open browser on start")
+	authUser     string
+	authPass     string
 	logBroadcast = make(chan string, 100)
 )
 

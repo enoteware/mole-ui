@@ -13,7 +13,7 @@ BINARY="$ROOT_DIR/bin/web-go"
 
 if [[ "$1" == "--uninstall" ]]; then
     echo "Uninstalling Mole Web UI service..."
-    launchctl unload "$PLIST_PATH" 2>/dev/null || true
+    launchctl unload "$PLIST_PATH" 2> /dev/null || true
     rm -f "$PLIST_PATH"
     echo "✅ Service uninstalled"
     exit 0
@@ -78,7 +78,7 @@ cat > "$PLIST_PATH" << EOF
 EOF
 
 # Load the service
-launchctl unload "$PLIST_PATH" 2>/dev/null || true
+launchctl unload "$PLIST_PATH" 2> /dev/null || true
 launchctl load "$PLIST_PATH"
 
 echo ""
@@ -96,6 +96,6 @@ echo "   - Uninstall:    $0 --uninstall"
 echo ""
 
 # Get local IP
-LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || echo "localhost")
+LOCAL_IP=$(ipconfig getifaddr en0 2> /dev/null || echo "localhost")
 echo "   Access: http://${LOCAL_IP}:${MOLE_PORT:-8080}"
 echo ""
