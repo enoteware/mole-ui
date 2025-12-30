@@ -494,6 +494,22 @@
                             </div>
                         </div>
 
+                        <!-- Volume Breakdown Results -->
+                        <div id="disk-result-section" class="hidden mb-6 animate-slide-up">
+                            <div class="glass rounded-2xl p-5 border border-purple-500/30">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-zinc-200 flex items-center gap-2">
+                                        <span class="text-lg">💾</span>
+                                        Volume Breakdown
+                                    </h3>
+                                    <button onclick="document.getElementById('disk-result-section').classList.add('hidden')" class="text-xs text-zinc-500 hover:text-zinc-300">Hide</button>
+                                </div>
+                                <div id="disk-analysis-list" class="space-y-2 max-h-[400px] overflow-y-auto">
+                                    <div class="text-zinc-500 text-center py-4">Analyzing...</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Quick Actions -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <!-- Large Files Finder -->
@@ -581,7 +597,13 @@
                                 </button>
                             </div>
 
-                            <div id="breadcrumb" class="flex items-center gap-1 text-sm mb-4 flex-wrap font-mono"></div>
+                            <div class="flex items-center justify-between gap-4 mb-4">
+                                <div id="breadcrumb" class="flex items-center gap-1 text-sm flex-wrap font-mono flex-1 min-w-0"></div>
+                                <button id="open-finder-btn" onclick="openInFinder()" class="hidden px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                    <span>📂</span>
+                                    <span>Open in Finder</span>
+                                </button>
+                            </div>
 
                             <div id="analyze-result" class="space-y-1 max-h-[400px] overflow-y-auto pr-2">
                                 <div class="text-zinc-500 text-center py-8">
@@ -1623,10 +1645,20 @@
             }
         }
 
+        // Track current analyzed path for Finder integration
+        let currentAnalyzedPath = '';
+
         function updateBreadcrumb(path) {
             const parts = path.split('/').filter(Boolean);
             const breadcrumb = document.getElementById('breadcrumb');
+            const finderBtn = document.getElementById('open-finder-btn');
             let currentPath = '';
+
+            // Store current path
+            currentAnalyzedPath = path;
+
+            // Show Finder button
+            finderBtn.classList.remove('hidden');
 
             breadcrumb.innerHTML = '<span class="cursor-pointer hover:text-mole-400 text-zinc-400 transition-colors" onclick="analyzeDisk(\'/\')">root</span>';
             parts.forEach((part, i) => {
@@ -1634,6 +1666,25 @@
                 const p = currentPath;
                 breadcrumb.innerHTML += `<span class="text-zinc-600 mx-1">/</span><span class="cursor-pointer hover:text-mole-400 text-zinc-400 transition-colors" onclick="analyzeDisk('${p}')">${part}</span>`;
             });
+        }
+
+        async function openInFinder() {
+            if (!currentAnalyzedPath) {
+                showToast('No folder selected', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/open-finder?path=' + encodeURIComponent(currentAnalyzedPath));
+                if (response.ok) {
+                    showToast('Opened in Finder', 'success');
+                } else {
+                    throw new Error('Failed to open in Finder');
+                }
+            } catch (err) {
+                console.error('Failed to open in Finder:', err);
+                showToast('Failed to open in Finder', 'error');
+            }
         }
 
         // Get user home directory

@@ -177,6 +177,7 @@ func main() {
 	http.HandleFunc("/api/storage/breakdown", basicAuth(handleStorageBreakdown))
 	http.HandleFunc("/api/volumes", basicAuth(handleListVolumes))
 	http.HandleFunc("/api/volumes/analyze", basicAuth(handleAnalyzeVolume))
+	http.HandleFunc("/api/open-finder", basicAuth(handleOpenFinder))
 	http.HandleFunc("/api/optimize", basicAuth(handleOptimize))
 	http.HandleFunc("/api/purge", basicAuth(handlePurge))
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))
@@ -791,6 +792,30 @@ func analyzePath(path string) []DirEntry {
 	}
 
 	return entries
+}
+
+func handleOpenFinder(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		http.Error(w, "path parameter required", http.StatusBadRequest)
+		return
+	}
+
+	// Verify path exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		http.Error(w, "path does not exist", http.StatusNotFound)
+		return
+	}
+
+	// Open path in Finder using macOS 'open' command
+	cmd := exec.Command("open", path)
+	if err := cmd.Run(); err != nil {
+		http.Error(w, fmt.Sprintf("failed to open in Finder: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "path": path})
 }
 
 var errStopWalk = fmt.Errorf("stop walk")
