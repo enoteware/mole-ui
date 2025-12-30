@@ -180,6 +180,7 @@ func main() {
 	http.HandleFunc("/api/open-finder", basicAuth(handleOpenFinder))
 	http.HandleFunc("/api/permissions/check", basicAuth(handlePermissionsCheck))
 	http.HandleFunc("/api/permissions/open-settings", basicAuth(handleOpenSystemSettings))
+	http.HandleFunc("/api/updates/check", basicAuth(handleCheckUpdates))
 	http.HandleFunc("/api/optimize", basicAuth(handleOptimize))
 	http.HandleFunc("/api/purge", basicAuth(handlePurge))
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))
@@ -258,6 +259,7 @@ type SystemStatus struct {
 	LocalIP     string      `json:"local_ip"`
 	OS          string      `json:"os"`
 	Uptime      string      `json:"uptime"`
+	Version     string      `json:"version"`
 	CPU         CPUInfo     `json:"cpu"`
 	Memory      MemInfo     `json:"memory"`
 	Disk        DiskInfo    `json:"disk"`
@@ -299,6 +301,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 func collectStatus() SystemStatus {
 	status := SystemStatus{
 		CollectedAt: time.Now(),
+		Version:     getCurrentVersion(),
 	}
 
 	if info, err := host.Info(); err == nil {

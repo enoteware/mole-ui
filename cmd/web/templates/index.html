@@ -239,6 +239,12 @@
 
                     <!-- Right: Connection Status -->
                     <div class="flex items-center gap-3 flex-shrink-0">
+                        <button onclick="checkForUpdates()" class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 hover:bg-zinc-700/50 transition-colors group" title="Check for updates">
+                            <span id="app-version" class="text-xs text-zinc-400 font-mono">v-</span>
+                            <svg class="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </button>
                         <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                             <span id="hostname" class="text-xs text-zinc-400 font-mono">-</span>
                             <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" id="connection-indicator" title="Connected"></span>
@@ -254,6 +260,41 @@
                 </div>
             </div>
         </header>
+
+        <!-- Update Available Banner -->
+        <div id="update-banner" class="hidden sticky top-16 z-30 glass border-b border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
+            <div class="container mx-auto px-4 lg:px-6 max-w-[1600px]">
+                <div class="flex items-center justify-between gap-4 py-3">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-blue-300">
+                                <span>Update Available: </span>
+                                <span id="update-version" class="font-mono">v-</span>
+                            </p>
+                            <p id="update-message" class="text-xs text-zinc-400 truncate">A new version is available</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button onclick="downloadUpdate()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                        <button onclick="dismissUpdateBanner()" class="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors">
+                            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Layout -->
         <div class="container mx-auto px-4 lg:px-6 py-6 max-w-[1600px]">
@@ -2254,6 +2295,63 @@
             }
         }
 
+        // Update Management
+        let currentUpdateInfo = null;
+
+        async function checkForUpdates() {
+            try {
+                showToast('Checking for updates...', 'info');
+                const response = await fetch('/api/updates/check');
+                const updateInfo = await response.json();
+
+                currentUpdateInfo = updateInfo;
+
+                if (updateInfo.update_available) {
+                    showUpdateBanner(updateInfo);
+                    showToast(`Update available: v${updateInfo.latest_version}`, 'success');
+                } else {
+                    showToast(`You're up to date (v${updateInfo.current_version})`, 'success');
+                }
+
+                return updateInfo;
+            } catch (err) {
+                console.error('Failed to check for updates:', err);
+                showToast('Failed to check for updates', 'error');
+            }
+        }
+
+        function showUpdateBanner(updateInfo) {
+            const banner = document.getElementById('update-banner');
+            const versionEl = document.getElementById('update-version');
+            const messageEl = document.getElementById('update-message');
+
+            versionEl.textContent = 'v' + updateInfo.latest_version;
+            messageEl.textContent = updateInfo.release_notes?.split('\n')[0] || 'New features and improvements available';
+
+            banner.classList.remove('hidden');
+        }
+
+        function dismissUpdateBanner() {
+            const banner = document.getElementById('update-banner');
+            banner.classList.add('hidden');
+        }
+
+        function downloadUpdate() {
+            if (!currentUpdateInfo || !currentUpdateInfo.download_url) {
+                showToast('Download URL not available', 'error');
+                return;
+            }
+
+            // Open download URL in browser
+            window.open(currentUpdateInfo.download_url, '_blank');
+            showToast('Opening download in browser...', 'info');
+
+            // Show installation instructions
+            setTimeout(() => {
+                showToast('After downloading, drag Mole.app to Applications to update', 'info');
+            }, 2000);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function () {
             startStatusStream();
@@ -2269,6 +2367,11 @@
                 document.getElementById('purge-path').value = home;
                 userHomeCache = home;
 
+                // Set version in header
+                if (data.version) {
+                    document.getElementById('app-version').textContent = 'v' + data.version;
+                }
+
                 // Initial health report update
                 updateHealthReport(data);
 
@@ -2277,6 +2380,9 @@
 
                 // Check if this is first run and show permissions modal
                 checkFirstRun();
+
+                // Check for updates on startup (after 2 seconds)
+                setTimeout(() => checkForUpdates(), 2000);
             });
         });
     </script>
