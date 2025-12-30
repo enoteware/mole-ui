@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	githubRepo    = "enoteware/mole-ui"
-	githubAPIURL  = "https://api.github.com/repos/" + githubRepo + "/releases/latest"
-	versionFile   = "VERSION"
+	githubRepo   = "enoteware/mole-ui"
+	githubAPIURL = "https://api.github.com/repos/" + githubRepo + "/releases/latest"
+	versionFile  = "VERSION"
 )
 
 type UpdateInfo struct {
@@ -114,8 +114,9 @@ func checkForUpdates() (*UpdateInfo, error) {
 
 // compareVersions returns:
 // -1 if v1 < v2
-//  0 if v1 == v2
-//  1 if v1 > v2
+//
+//	0 if v1 == v2
+//	1 if v1 > v2
 func compareVersions(v1, v2 string) int {
 	// Simple string comparison for semantic versions
 	// For proper semver, use a library like github.com/Masterminds/semver
