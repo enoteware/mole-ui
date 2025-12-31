@@ -1581,26 +1581,51 @@
 
         function updateUninstallBtn() {
             const checked = document.querySelectorAll('.app-checkbox:checked').length;
-            document.getElementById('uninstall-btn').disabled = checked === 0;
+            const btn = document.getElementById('uninstall-btn');
+            const shouldDisable = checked === 0;
+            console.log(`updateUninstallBtn: ${checked} checked, button should be ${shouldDisable ? 'disabled' : 'enabled'}`);
+            btn.disabled = shouldDisable;
         }
 
         async function uninstallSelected() {
-            const apps = [...document.querySelectorAll('.app-checkbox:checked')].map(el => el.value);
-            if (apps.length === 0) return;
-            if (!confirm(`Are you sure you want to uninstall ${apps.length} app(s)?`)) return;
+            console.log('uninstallSelected called');
 
+            const apps = [...document.querySelectorAll('.app-checkbox:checked')].map(el => el.value);
+            console.log('Selected apps:', apps);
+
+            if (apps.length === 0) {
+                showToast('No apps selected', 'warning');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to uninstall ${apps.length} app(s)?`)) {
+                console.log('User cancelled');
+                return;
+            }
+
+            console.log('Starting uninstall process...');
             setTabStatus('uninstall', 'running');
             showProgress('uninstall', 'Uninstalling...', `Removing ${apps.length} application(s)`);
             const activityId = addActivity('uninstall', 'App Uninstall', `Removing ${apps.length} app(s)`, 'running');
 
             try {
+                console.log('Sending request to /api/uninstall');
                 const response = await fetch('/api/uninstall', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ apps })
                 });
 
-                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Uninstall result:', result);
 
                 hideProgress('uninstall');
                 setTabStatus('uninstall', 'complete');
@@ -1613,6 +1638,7 @@
                 // Force a status refresh for sidebar stats
                 fetch('/api/status').then(r => r.json()).then(updateStatus).catch(() => {});
             } catch (err) {
+                console.error('Uninstall error:', err);
                 hideProgress('uninstall');
                 setTabStatus('uninstall', 'error');
                 updateActivity(activityId, 'error', err.message);
