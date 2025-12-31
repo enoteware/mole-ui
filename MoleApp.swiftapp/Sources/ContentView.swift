@@ -3,11 +3,12 @@ import WebKit
 
 struct ContentView: View {
     @StateObject private var serverManager = ServerManager()
-    
+    @State private var cacheBuster = Date().timeIntervalSince1970
+
     var body: some View {
         ZStack {
             if serverManager.isServerRunning {
-                WebView(url: URL(string: "http://127.0.0.1:8081")!)
+                WebView(url: URL(string: "http://127.0.0.1:8081?v=\(Int(cacheBuster))")!)
                     .frame(minWidth: 1000, minHeight: 700)
             } else if serverManager.isStarting {
                 VStack(spacing: 20) {
