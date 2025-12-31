@@ -20,24 +20,33 @@ echo ""
 
 # 3. Create DMG installer
 echo "💿 Creating DMG installer..."
-rm -rf dmg-build Mole-Installer.dmg Mole.app
+
+# Get version from VERSION file
+VERSION=$(cat VERSION 2>/dev/null || echo "dev")
+DMG_NAME="Mole-v${VERSION}-$(date +%Y%m%d-%H%M%S).dmg"
+
+rm -rf dmg-build Mole-Installer*.dmg Mole.app
 mkdir -p dmg-build
 cp -R MoleSwift.app dmg-build/Mole.app
 ln -s /Applications dmg-build/Applications
 
-hdiutil create -volname "Mole Installer" -srcfolder dmg-build -ov -format UDZO Mole-Installer.dmg > /dev/null 2>&1
+hdiutil create -volname "Mole Installer v${VERSION}" -srcfolder dmg-build -ov -format UDZO "$DMG_NAME" > /dev/null 2>&1
 rm -rf dmg-build
 
-echo "✅ DMG created ($(du -h Mole-Installer.dmg | cut -f1))"
+echo "✅ DMG created: $DMG_NAME ($(du -h "$DMG_NAME" | cut -f1))"
 echo ""
 
 echo "🎉 Build complete!"
 echo ""
 echo "📦 Files created:"
 echo "   MoleSwift.app (native Swift app with embedded WebKit - $(du -sh MoleSwift.app | cut -f1))"
-echo "   Mole-Installer.dmg (for distribution - $(du -h Mole-Installer.dmg | cut -f1))"
+echo "   $DMG_NAME (for distribution - $(du -h "$DMG_NAME" | cut -f1))"
 echo ""
-echo "📤 Share Mole-Installer.dmg with your family via:"
+echo "🔐 DMG Verification:"
+echo "   MD5: $(md5 -q "$DMG_NAME")"
+echo "   SHA256: $(shasum -a 256 "$DMG_NAME" | cut -d' ' -f1)"
+echo ""
+echo "📤 Share $DMG_NAME with your family via:"
 echo "   • AirDrop"
 echo "   • iCloud Drive"
 echo "   • Email"
