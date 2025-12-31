@@ -10,13 +10,13 @@ echo ""
 
 # Check if running as root
 if [ "$EUID" -eq 0 ]; then
-   echo "❌ Do NOT run this script with sudo"
-   exit 1
+    echo "❌ Do NOT run this script with sudo"
+    exit 1
 fi
 
 echo "Step 1: Killing all Mole processes..."
-pkill -9 Mole 2>/dev/null || true
-pkill -9 web-go 2>/dev/null || true
+pkill -9 Mole 2> /dev/null || true
+pkill -9 web-go 2> /dev/null || true
 sleep 2
 echo "✅ Processes killed"
 echo ""
@@ -38,15 +38,15 @@ fi
 echo ""
 
 echo "Step 3: Clearing all Mole caches..."
-rm -rf ~/Library/Caches/com.enoteware.mole* 2>/dev/null || true
-rm -rf ~/Library/WebKit/com.enoteware.mole* 2>/dev/null || true
-rm -rf ~/Library/Saved\ Application\ State/com.enoteware.mole* 2>/dev/null || true
+rm -rf ~/Library/Caches/com.enoteware.mole* 2> /dev/null || true
+rm -rf ~/Library/WebKit/com.enoteware.mole* 2> /dev/null || true
+rm -rf ~/Library/Saved\ Application\ State/com.enoteware.mole* 2> /dev/null || true
 echo "✅ Caches cleared"
 echo ""
 
 echo "Step 4: Clearing WebKit global caches (may take a moment)..."
-rm -rf ~/Library/Caches/com.apple.WebKit.Networking 2>/dev/null || true
-rm -rf ~/Library/Caches/com.apple.WebKit.WebContent 2>/dev/null || true
+rm -rf ~/Library/Caches/com.apple.WebKit.Networking 2> /dev/null || true
+rm -rf ~/Library/Caches/com.apple.WebKit.WebContent 2> /dev/null || true
 echo "✅ WebKit caches cleared"
 echo ""
 
