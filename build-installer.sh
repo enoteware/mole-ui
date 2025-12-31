@@ -22,7 +22,7 @@ echo ""
 echo "💿 Creating DMG installer..."
 
 # Get version from VERSION file
-VERSION=$(cat VERSION 2>/dev/null || echo "dev")
+VERSION=$(cat VERSION 2> /dev/null || echo "dev")
 DMG_NAME="Mole-v${VERSION}-$(date +%Y%m%d-%H%M%S).dmg"
 
 rm -rf dmg-build Mole-Installer*.dmg Mole.app
