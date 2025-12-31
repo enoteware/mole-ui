@@ -11,32 +11,47 @@ class ServerManager: ObservableObject {
     
     func startServer() {
         guard serverProcess == nil else { return }
-        
+
         isStarting = true
         error = nil
-        
+
         // Get the path to the bundled binary
-        guard let appPath = Bundle.main.bundlePath as NSString? else {
-            error = "Could not find app bundle"
-            isStarting = false
-            return
-        }
-        
-        let contentsPath = appPath.appendingPathComponent("Contents")
-        let macOSPath = (contentsPath as NSString).appendingPathComponent("MacOS")
-        let binaryPath = (macOSPath as NSString).appendingPathComponent("web-go")
-        
-        // Check if binary exists
+        let appPath = Bundle.main.bundlePath
+        print("App bundle path: \(appPath)")
+
+        // Try multiple possible locations for the binary
+        let possiblePaths = [
+            // Standard app bundle location
+            "\(appPath)/Contents/MacOS/web-go",
+            // Development/preview location - check in project directory
+            "\(FileManager.default.currentDirectoryPath)/bin/web-go",
+            // Relative to app bundle for .swiftapp packages
+            URL(fileURLWithPath: appPath).deletingLastPathComponent().appendingPathComponent("bin/web-go").path,
+            // Check parent directories for bin/web-go
+            URL(fileURLWithPath: appPath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("bin/web-go").path
+        ]
+
+        var binaryPath: String?
         let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: binaryPath) else {
-            error = "Server binary not found at: \(binaryPath)"
+
+        for path in possiblePaths {
+            print("Checking for binary at: \(path)")
+            if fileManager.fileExists(atPath: path) {
+                binaryPath = path
+                print("Found binary at: \(path)")
+                break
+            }
+        }
+
+        guard let finalPath = binaryPath else {
+            error = "Server binary not found. Checked paths:\n\(possiblePaths.joined(separator: "\n"))"
             isStarting = false
             return
         }
         
         // Set up process
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: binaryPath)
+        process.executableURL = URL(fileURLWithPath: finalPath)
         
         // Set environment variables
         var environment = ProcessInfo.processInfo.environment

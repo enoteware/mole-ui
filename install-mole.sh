@@ -12,8 +12,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Expected DMG details
-EXPECTED_DMG="Mole-v1.0.0-20251230-161343.dmg"
-EXPECTED_MD5="ce014d0c4b43f23c76a6ef51e8239fcf"
+EXPECTED_DMG="Mole-v1.0.0-20251231-111552.dmg"
+EXPECTED_MD5="3d370f39fab755c861cca5e682dd83ca"
 
 echo ""
 echo "═══════════════════════════════════════════"
