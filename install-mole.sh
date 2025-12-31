@@ -46,8 +46,8 @@ fi
 echo ""
 
 echo -e "${BLUE}Step 2/5: Killing Mole processes...${NC}"
-pkill -9 Mole 2>/dev/null && echo -e "${GREEN}✅ Killed Mole processes${NC}" || echo "No Mole processes running"
-pkill -9 web-go 2>/dev/null && echo -e "${GREEN}✅ Killed web-go processes${NC}" || echo "No web-go processes running"
+pkill -9 Mole 2> /dev/null && echo -e "${GREEN}✅ Killed Mole processes${NC}" || echo "No Mole processes running"
+pkill -9 web-go 2> /dev/null && echo -e "${GREEN}✅ Killed web-go processes${NC}" || echo "No web-go processes running"
 sleep 1
 echo ""
 
@@ -67,11 +67,11 @@ fi
 echo ""
 
 echo -e "${BLUE}Step 4/5: Clearing all caches...${NC}"
-rm -rf ~/Library/Caches/com.enoteware.mole* 2>/dev/null || true
-rm -rf ~/Library/WebKit/com.enoteware.mole* 2>/dev/null || true
-rm -rf ~/Library/Saved\ Application\ State/com.enoteware.mole* 2>/dev/null || true
-rm -rf ~/Library/Caches/com.apple.WebKit.Networking 2>/dev/null || true
-rm -rf ~/Library/Caches/com.apple.WebKit.WebContent 2>/dev/null || true
+rm -rf ~/Library/Caches/com.enoteware.mole* 2> /dev/null || true
+rm -rf ~/Library/WebKit/com.enoteware.mole* 2> /dev/null || true
+rm -rf ~/Library/Saved\ Application\ State/com.enoteware.mole* 2> /dev/null || true
+rm -rf ~/Library/Caches/com.apple.WebKit.Networking 2> /dev/null || true
+rm -rf ~/Library/Caches/com.apple.WebKit.WebContent 2> /dev/null || true
 echo -e "${GREEN}✅ All caches cleared${NC}"
 echo ""
 
@@ -93,7 +93,7 @@ read -p "Press ENTER after dragging app to Applications... "
 
 echo ""
 echo "Ejecting DMG..."
-hdiutil detach /Volumes/Mole\ Installer\ v1.0.0 -quiet 2>/dev/null || true
+hdiutil detach /Volumes/Mole\ Installer\ v1.0.0 -quiet 2> /dev/null || true
 sleep 1
 
 # Verify installation
