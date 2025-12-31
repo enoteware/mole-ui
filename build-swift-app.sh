@@ -65,7 +65,6 @@ if [ ! -f "bin/web-go" ]; then
 fi
 cp bin/web-go MoleSwift.app/Contents/MacOS/
 
-
 # Copy app icon if it exists
 if [ -f "MoleApp.swiftapp/Resources/AppIcon.icns" ]; then
     echo "🎨 Adding app icon..."

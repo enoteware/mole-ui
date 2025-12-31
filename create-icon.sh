@@ -21,7 +21,7 @@ create_icon_size() {
     fi
 
     # Use Python to create PNG with emoji
-    python3 - <<EOF
+    python3 - << EOF
 from PIL import Image, ImageDraw, ImageFont
 import sys
 
@@ -49,11 +49,11 @@ EOF
 }
 
 # Check if Python PIL is available
-if ! python3 -c "import PIL" 2>/dev/null; then
+if ! python3 -c "import PIL" 2> /dev/null; then
     echo "❌ Python PIL library not found"
     echo ""
     echo "Installing pillow..."
-    pip3 install pillow --break-system-packages 2>/dev/null || pip3 install pillow
+    pip3 install pillow --break-system-packages 2> /dev/null || pip3 install pillow
 fi
 
 echo "Generating icon sizes..."
