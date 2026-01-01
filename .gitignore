@@ -1,5 +1,6 @@
-# Binaries
+# Binaries (but allow shell scripts)
 bin/
+!bin/*.sh
 *.exe
 *.dll
 *.so
@@ -9,6 +10,7 @@ bin/
 Mole.app/
 MoleSwift.app/
 Mole-Installer.dmg
+Mole-v*.dmg
 dmg-build/
 dist/
 build/
