@@ -294,26 +294,32 @@ batch_uninstall_applications() {
     if [[ ${#running_apps[@]} -gt 0 ]]; then
         removal_note+=" ${YELLOW}[Running]${NC}"
     fi
-    echo -ne "${PURPLE}${ICON_ARROW}${NC} ${removal_note}  ${GREEN}Enter${NC} confirm, ${GRAY}ESC${NC} cancel: "
 
-    drain_pending_input # Clean up any pending input before confirmation
-    IFS= read -r -s -n1 key || key=""
-    drain_pending_input # Clean up any escape sequence remnants
-    case "$key" in
-        $'\e' | q | Q)
-            echo ""
-            echo ""
-            return 0
-            ;;
-        "" | $'\n' | $'\r' | y | Y)
-            printf "\r\033[K" # Clear the prompt line
-            ;;
-        *)
-            echo ""
-            echo ""
-            return 0
-            ;;
-    esac
+    # Check for auto-confirmation flag (for programmatic access)
+    if [[ "${MOLE_NO_CONFIRM:-}" == "1" ]]; then
+        echo -e "${PURPLE}${ICON_ARROW}${NC} ${removal_note} ${GREEN}(Auto-confirmed)${NC}"
+    else
+        echo -ne "${PURPLE}${ICON_ARROW}${NC} ${removal_note}  ${GREEN}Enter${NC} confirm, ${GRAY}ESC${NC} cancel: "
+
+        drain_pending_input # Clean up any pending input before confirmation
+        IFS= read -r -s -n1 key || key=""
+        drain_pending_input # Clean up any escape sequence remnants
+        case "$key" in
+            $'\e' | q | Q)
+                echo ""
+                echo ""
+                return 0
+                ;;
+            "" | $'\n' | $'\r' | y | Y)
+                printf "\r\033[K" # Clear the prompt line
+                ;;
+            *)
+                echo ""
+                echo ""
+                return 0
+                ;;
+        esac
+    fi
 
     # User confirmed, now request sudo access if needed
     if [[ ${#sudo_apps[@]} -gt 0 ]]; then
@@ -542,4 +548,9 @@ batch_uninstall_applications() {
 
     ((total_size_cleaned += total_size_freed))
     unset failed_items
+
+    # Return failure if any apps failed to uninstall
+    if [[ $failed_count -gt 0 ]]; then
+        return 1
+    fi
 }

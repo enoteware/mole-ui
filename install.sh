@@ -472,23 +472,53 @@ uninstall_mole() {
             ;;
     esac
 
+    # Ask before removing data directories
+    local data_exists=0
+    local -a data_dirs=(
+        "$HOME/.cache/mole"
+        "$HOME/Library/Application Support/Mole"
+        "$HOME/Library/Caches/Mole"
+        "$HOME/Library/WebKit/Mole"
+        "$HOME/Library/WebKit/com.apple.WebKit.WebContent/Mole"
+        "$HOME/Library/HTTPStorages/Mole"
+    )
+
+    for dir in "${data_dirs[@]}"; do
+        if [[ -d "$dir" ]]; then
+            data_exists=1
+            break
+        fi
+    done
+
     # Ask before removing config directory
-    if [[ -d "$CONFIG_DIR" ]]; then
+    if [[ -d "$CONFIG_DIR" ]] || [[ $data_exists -eq 1 ]]; then
         if [[ $is_safe -eq 0 ]]; then
             log_warning "Config directory $CONFIG_DIR is not safe to auto-remove"
             log_warning "Skipping automatic removal for safety"
             echo ""
             echo "Please manually review and remove mole-specific files from:"
             echo "  $CONFIG_DIR"
+            for dir in "${data_dirs[@]}"; do
+                [[ -d "$dir" ]] && echo "  $dir"
+            done
         else
             echo ""
-            read -p "Remove configuration directory $CONFIG_DIR? (y/N): " -n 1 -r
+            echo "This will remove your configuration and application data:"
+            echo "  $CONFIG_DIR"
+            for dir in "${data_dirs[@]}"; do
+                [[ -d "$dir" ]] && echo "  $dir"
+            done
+            echo ""
+            read -p "Remove these directories? (y/N): " -n 1 -r
             echo ""
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 rm -rf "$CONFIG_DIR"
-                log_success "Removed configuration"
+                for dir in "${data_dirs[@]}"; do
+                    rm -rf "$dir"
+                done
+                log_success "Removed configuration and data"
             else
-                log_success "Configuration preserved"
+                log_success "Configuration and data preserved"
             fi
         fi
     fi

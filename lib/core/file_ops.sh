@@ -128,10 +128,53 @@ safe_sudo_remove() {
 
     debug_log "Removing (sudo): $path"
 
-    # Perform the deletion
+    # In GUI mode (no TTY), use privileged helper - shows native auth dialog
+    if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
+        debug_log "GUI mode: using privileged helper for: $path"
+
+        # Find the privileged helper in the app bundle
+        local helper=""
+        local script_dir
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+        # Check various locations for the helper
+        if [[ -x "$script_dir/../privileged-helper" ]]; then
+            helper="$script_dir/../privileged-helper"
+        elif [[ -x "$script_dir/../../privileged-helper" ]]; then
+            helper="$script_dir/../../privileged-helper"
+        elif [[ -n "${MOLE_APP_RESOURCES:-}" && -x "${MOLE_APP_RESOURCES}/privileged-helper" ]]; then
+            helper="${MOLE_APP_RESOURCES}/privileged-helper"
+        fi
+
+        if [[ -n "$helper" && -x "$helper" ]]; then
+            debug_log "Using helper at: $helper"
+            if "$helper" /bin/rm -rf "$path"; then
+                return 0
+            fi
+        else
+            debug_log "Privileged helper not found, trying osascript fallback"
+        fi
+
+        # Fallback to osascript if helper not found or failed
+        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2>/dev/null; then
+            return 0
+        fi
+
+        log_error "Failed to remove (GUI mode): $path"
+        return 1
+    fi
+
+    # Normal mode: try sudo first
     if sudo rm -rf "$path" 2> /dev/null; then # SAFE: safe_sudo_remove implementation
         return 0
     else
+        # Fallback: Try AppleScript (prompts user for password via GUI)
+        # Only acts as fallback if non-interactive sudo failed
+        debug_log "Sudo failed, attempting AppleScript fallback for: $path"
+        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2>/dev/null; then
+             return 0
+        fi
+
         log_error "Failed to remove (sudo): $path"
         return 1
     fi

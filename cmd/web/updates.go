@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -16,12 +18,19 @@ const (
 )
 
 type UpdateInfo struct {
-	CurrentVersion  string `json:"current_version"`
-	LatestVersion   string `json:"latest_version"`
-	UpdateAvailable bool   `json:"update_available"`
-	DownloadURL     string `json:"download_url"`
-	ReleaseNotes    string `json:"release_notes"`
-	PublishedAt     string `json:"published_at"`
+	CurrentVersion  string       `json:"current_version"`
+	LatestVersion   string       `json:"latest_version"`
+	UpdateAvailable bool         `json:"update_available"`
+	DownloadURL     string       `json:"download_url"`
+	ReleaseNotes    string       `json:"release_notes"`
+	PublishedAt     string       `json:"published_at"`
+	SystemUpdates   []UpdateItem `json:"system_updates,omitempty"`
+}
+
+type UpdateItem struct {
+	Name    string `json:"name"`
+	Label   string `json:"label"`
+	Details string `json:"details"`
 }
 
 type GitHubRelease struct {
@@ -109,7 +118,73 @@ func checkForUpdates() (*UpdateInfo, error) {
 		PublishedAt:     release.PublishedAt,
 	}
 
+	// Add Homebrew checks
+	if _, err := exec.LookPath("brew"); err == nil {
+		cmd := exec.Command("brew", "outdated", "--quiet")
+		if out, err := cmd.Output(); err == nil && len(out) > 0 {
+			lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+			updateInfo.SystemUpdates = append(updateInfo.SystemUpdates, UpdateItem{
+				Name:    "Homebrew",
+				Label:   fmt.Sprintf("Homebrew (%d updates available)", len(lines)),
+				Details: string(out),
+			})
+		}
+	}
+
 	return updateInfo, nil
+}
+
+func handlePerformUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	moleScript := findMoleScript()
+	if moleScript == "" {
+		http.Error(w, "Mole CLI not found", http.StatusInternalServerError)
+		return
+	}
+
+	var result CleanResult
+	writeLog("Performing update: %s", req.Name)
+	if req.Name == "Mole" {
+		result = runMoleCommand("update", "--debug")
+	} else if req.Name == "Homebrew" {
+		// Homebrew upgrade
+		writeLog("Executing: brew upgrade")
+		cmd := exec.Command("brew", "upgrade")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		err := cmd.Run()
+		result = CleanResult{
+			Success: err == nil,
+			Message: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return "Homebrew upgraded successfully"
+			}(),
+			Output: stripANSI(out.String()),
+		}
+	} else {
+		writeLog("ERROR: Unsupported update type: %s", req.Name)
+		result = CleanResult{Success: false, Message: "Unsupported update type"}
+	}
+	
+	writeLog("Update result for %s: Success=%v, Message=%s", req.Name, result.Success, result.Message)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 
 // compareVersions returns:

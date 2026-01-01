@@ -286,6 +286,7 @@ show_help() {
     printf "  %s%-28s%s %s\n" "$GREEN" "mo clean --dry-run" "$NC" "Preview cleanup"
     printf "  %s%-28s%s %s\n" "$GREEN" "mo clean --whitelist" "$NC" "Manage protected caches"
     printf "  %s%-28s%s %s\n" "$GREEN" "mo uninstall --force-rescan" "$NC" "Rescan apps and refresh cache"
+    printf "  %s%-28s%s %s\n" "$GREEN" "mo uninstall --path PATH" "$NC" "Non-interactive app uninstallation"
     printf "  %s%-28s%s %s\n" "$GREEN" "mo optimize --whitelist" "$NC" "Manage protected items"
     echo
     printf "%s%s%s\n" "$BLUE" "OPTIONS" "$NC"
@@ -592,14 +593,22 @@ remove_mole() {
             fi
         done
     fi
-    # Clean up cache first (silent)
-    if [[ -d "$HOME/.cache/mole" ]]; then
-        rm -rf "$HOME/.cache/mole" 2> /dev/null || true
-    fi
-    # Clean up configuration last (silent)
-    if [[ -d "$HOME/.config/mole" ]]; then
-        rm -rf "$HOME/.config/mole" 2> /dev/null || true
-    fi
+    # Clean up cache and support files (silent)
+    local -a cleanup_dirs=(
+        "$HOME/.config/mole"
+        "$HOME/.cache/mole"
+        "$HOME/Library/Application Support/Mole"
+        "$HOME/Library/Caches/Mole"
+        "$HOME/Library/WebKit/Mole"
+        "$HOME/Library/WebKit/com.apple.WebKit.WebContent/Mole"
+        "$HOME/Library/HTTPStorages/Mole"
+    )
+
+    for dir in "${cleanup_dirs[@]}"; do
+        if [[ -d "$dir" ]]; then
+            rm -rf "$dir" 2> /dev/null || true
+        fi
+    done
 
     # Show final result
     local final_message

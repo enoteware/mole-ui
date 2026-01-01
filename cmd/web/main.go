@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/subtle"
 	"embed"
 	"encoding/base64"
@@ -184,8 +185,13 @@ func main() {
 	http.HandleFunc("/api/open-finder", basicAuth(handleOpenFinder))
 	http.HandleFunc("/api/permissions/check", basicAuth(handlePermissionsCheck))
 	http.HandleFunc("/api/permissions/open-settings", basicAuth(handleOpenSystemSettings))
+	http.HandleFunc("/api/permissions/admin-test", basicAuth(handlePermissionsAdminTest))
+	http.HandleFunc("/api/logs/open", basicAuth(handleOpenLogs))
+	http.HandleFunc("/api/logs/bundle", basicAuth(handleLogsBundle))
 	http.HandleFunc("/api/updates/check", basicAuth(handleCheckUpdates))
+	http.HandleFunc("/api/updates/perform", basicAuth(handlePerformUpdate))
 	http.HandleFunc("/api/optimize", basicAuth(handleOptimize))
+	http.HandleFunc("/api/debug/logs", basicAuth(handleDebugLogs))
 	http.HandleFunc("/api/purge", basicAuth(handlePurge))
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))
 	http.HandleFunc("/api/status/stream", basicAuth(handleStatusStream))
@@ -522,9 +528,35 @@ func handleListApps(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(apps)
 }
 
+func isProtectedAppPath(path string) bool {
+	if strings.HasPrefix(path, "/System/Applications/") {
+		return true
+	}
+	bundleID := getBundleID(path)
+	return strings.HasPrefix(bundleID, "com.apple.")
+}
+
+func getBundleID(appPath string) string {
+	plistPath := filepath.Join(appPath, "Contents", "Info.plist")
+	if !fileExists(plistPath) {
+		return ""
+	}
+	cmd := exec.Command("plutil", "-extract", "CFBundleIdentifier", "raw", plistPath)
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
+
 func listApplications() []AppInfo {
 	var apps []AppInfo
-	appDirs := []string{"/Applications", filepath.Join(os.Getenv("HOME"), "Applications")}
+	cwd, _ := os.Getwd()
+	appDirs := []string{
+		"/Applications",
+		filepath.Join(os.Getenv("HOME"), "Applications"),
+		cwd,
+	}
 
 	for _, dir := range appDirs {
 		entries, err := os.ReadDir(dir)
@@ -536,6 +568,9 @@ func listApplications() []AppInfo {
 				continue
 			}
 			path := filepath.Join(dir, entry.Name())
+			if isProtectedAppPath(path) {
+				continue
+			}
 			size := getDirSize(path)
 			apps = append(apps, AppInfo{
 				Name:      strings.TrimSuffix(entry.Name(), ".app"),
@@ -656,82 +691,139 @@ func handleUninstall(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode([]CleanResult{result})
 }
 
+func writeLog(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	log.Println(msg)
+
+	// Broadcast to SSE clients (non-blocking)
+	select {
+	case logBroadcast <- msg:
+	default:
+		// Channel full, skip
+	}
+
+	// Also write to a file for user to retrieve
+	cacheDir, err := os.UserCacheDir()
+	if err == nil {
+		logDir := filepath.Join(cacheDir, "Mole")
+		os.MkdirAll(logDir, 0755)
+		f, err := os.OpenFile(filepath.Join(logDir, "web-ui.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err == nil {
+			defer f.Close()
+			f.WriteString(fmt.Sprintf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), msg))
+		}
+	}
+}
+
+func findMoleScript() string {
+	writeLog("Finding Mole CLI script...")
+
+	// Try current directory
+	if _, err := os.Stat("./mole"); err == nil {
+		abs, _ := filepath.Abs("./mole")
+		writeLog("Found Mole CLI at: %s", abs)
+		return abs
+	}
+	// Try two levels up (common in dev: bin/web-go -> ../../mole)
+	if _, err := os.Stat("../../mole"); err == nil {
+		abs, _ := filepath.Abs("../../mole")
+		writeLog("Found Mole CLI at: %s", abs)
+		return abs
+	}
+
+	// Try relative to executable
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		// Try bundled location (relative to binary in MoleSwift.app/Contents/MacOS/web-go)
+		bundled := filepath.Join(exeDir, "..", "Resources", "mole")
+		if _, err := os.Stat(bundled); err == nil {
+			writeLog("Found Mole CLI at executable-relative bundled location: %s", bundled)
+			return bundled
+		}
+	}
+	// Try bundled location (relative to binary in MoleSwift.app/Contents/MacOS/web-go)
+	if _, err := os.Stat("../Resources/mole"); err == nil {
+		abs, _ := filepath.Abs("../Resources/mole")
+		writeLog("Found Mole CLI at bundled location: %s", abs)
+		return abs
+	}
+
+	// Try command -v mole
+	path, err := exec.LookPath("mole")
+	if err == nil {
+		writeLog("Found Mole CLI via PATH: %s", path)
+		return path
+	}
+
+	// Try standard install path (LAST RESORT to prevent picking up broken installs)
+	if _, err := os.Stat("/usr/local/bin/mole"); err == nil {
+		writeLog("Found Mole CLI at standard path: /usr/local/bin/mole")
+		return "/usr/local/bin/mole"
+	}
+
+	writeLog("ERROR: Mole CLI not found in any expected location")
+	return ""
+}
+
 func uninstallApps(appPaths []string) CleanResult {
 	if len(appPaths) == 0 {
 		return CleanResult{Success: false, Message: "No apps specified"}
 	}
 
-	homeDir := os.Getenv("HOME")
-	var validApps []string
-	var appNames []string
-
-	// Validate all apps first
-	for _, appPath := range appPaths {
-		if !strings.HasSuffix(appPath, ".app") {
-			continue
-		}
-		if _, err := os.Stat(appPath); os.IsNotExist(err) {
-			continue
-		}
-		validApps = append(validApps, appPath)
-		appNames = append(appNames, strings.TrimSuffix(filepath.Base(appPath), ".app"))
+	moleScript := findMoleScript()
+	if moleScript == "" {
+		return CleanResult{Success: false, Message: "Mole CLI not found. Please ensure Mole is installed correctly."}
 	}
 
-	if len(validApps) == 0 {
-		return CleanResult{Success: false, Message: "No valid apps found"}
-	}
-
-	// Build a single osascript command to delete all apps at once (one auth prompt)
-	var scriptParts []string
-	for _, appPath := range validApps {
-		scriptParts = append(scriptParts, fmt.Sprintf(`delete POSIX file "%s"`, appPath))
-	}
-	script := fmt.Sprintf(`tell application "Finder"
-%s
-end tell`, strings.Join(scriptParts, "\n"))
-
-	trashCmd := exec.Command("osascript", "-e", script)
-	if err := trashCmd.Run(); err != nil {
-		// Fallback: try rm -rf for each app
-		var failed []string
-		for _, appPath := range validApps {
-			rmCmd := exec.Command("rm", "-rf", appPath)
-			if rmErr := rmCmd.Run(); rmErr != nil {
-				failed = append(failed, filepath.Base(appPath))
-			}
-		}
-		if len(failed) > 0 {
-			return CleanResult{Success: false, Message: fmt.Sprintf("Failed to remove: %s", strings.Join(failed, ", "))}
-		}
-	}
-
-	// Clean up related files in ~/Library for each app
+	var successful []string
+	var failed []string
 	var totalCleaned int64
-	for _, appName := range appNames {
-		cleanupPaths := []string{
-			filepath.Join(homeDir, "Library", "Application Support", appName),
-			filepath.Join(homeDir, "Library", "Caches", appName),
-			filepath.Join(homeDir, "Library", "Preferences", fmt.Sprintf("com.%s.plist", strings.ToLower(appName))),
-			filepath.Join(homeDir, "Library", "Saved Application State", fmt.Sprintf("com.%s.savedState", strings.ToLower(appName))),
+
+	for _, appPath := range appPaths {
+		writeLog("Attempting to uninstall: %s", appPath)
+
+		if _, err := os.Stat(appPath); os.IsNotExist(err) {
+			writeLog("ERROR: Path does not exist: %s", appPath)
+			failed = append(failed, fmt.Sprintf("%s (not found)", filepath.Base(appPath)))
+			continue
 		}
 
-		for _, path := range cleanupPaths {
-			if info, err := os.Stat(path); err == nil {
-				if info.IsDir() {
-					totalCleaned += getDirSize(path)
-				} else {
-					totalCleaned += info.Size()
-				}
-				os.RemoveAll(path)
-			}
+		// Use the mole CLI for robust uninstallation
+		// mole uninstall --path <path> --debug
+		writeLog("Executing: %s uninstall --path %s --debug", moleScript, appPath)
+		cmd := exec.Command(moleScript, "uninstall", "--path", appPath, "--debug")
+		cmd.Env = append(os.Environ(), "MOLE_NO_CONFIRM=1")
+		var output bytes.Buffer
+		cmd.Stdout = &output
+		cmd.Stderr = &output
+
+		err := cmd.Run()
+		outStr := output.String()
+
+		if err != nil {
+			writeLog("ERROR: Uninstallation failed for %s: %v", appPath, err)
+			writeLog("Script Output:\n%s", outStr)
+			failed = append(failed, fmt.Sprintf("%s (%v)", filepath.Base(appPath), err))
+		} else {
+			writeLog("SUCCESS: Uninstalled %s", appPath)
+			successful = append(successful, filepath.Base(appPath))
 		}
+	}
+
+	if len(failed) > 0 && len(successful) == 0 {
+		return CleanResult{Success: false, Message: fmt.Sprintf("Failed to remove: %s", strings.Join(failed, ", "))}
+	}
+
+	msg := fmt.Sprintf("Uninstalled %d app(s)", len(successful))
+	if len(failed) > 0 {
+		msg += fmt.Sprintf(" (Failed %d: %s)", len(failed), strings.Join(failed, ", "))
 	}
 
 	return CleanResult{
 		Success: true,
-		Message: fmt.Sprintf("Uninstalled %d app(s)", len(appNames)),
-		Cleaned: totalCleaned,
-		Output:  fmt.Sprintf("Removed %s and cleaned up %s of related files", strings.Join(appNames, ", "), formatBytes(totalCleaned)),
+		Message: msg,
+		Cleaned: totalCleaned, // Will be 0 for now as we don't parse script output
+		Output:  fmt.Sprintf("Used Mole CLI for comprehensive cleanup of: %s", strings.Join(successful, ", ")),
 	}
 }
 
@@ -1344,18 +1436,22 @@ echo ""
 }
 
 func runMoleCommand(args ...string) CleanResult {
-	mole := filepath.Join(moleDir, "mole")
-	if !fileExists(mole) {
-		mole = filepath.Join(moleDir, "mo")
+	mole := findMoleScript()
+	if mole == "" {
+		return CleanResult{
+			Success: false,
+			Message: "Mole CLI not found",
+		}
 	}
 
 	cmd := exec.Command(mole, args...)
-	cmd.Dir = moleDir
+	// Try to set Dir to mole's parent dir if possible
+	cmd.Dir = filepath.Dir(mole)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 
-	fmt.Printf("Running command: %s %v\n", mole, args)
+	writeLog("Running command: %s %v", mole, args)
 	if err := cmd.Start(); err != nil {
 		errMsg := fmt.Sprintf("Error starting command: %v", err)
 		fmt.Println(errMsg)
@@ -1459,4 +1555,25 @@ func formatBytes(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+func handleDebugLogs(w http.ResponseWriter, r *http.Request) {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		http.Error(w, "Could not find cache dir", http.StatusInternalServerError)
+		return
+	}
+	logPath := filepath.Join(cacheDir, "Mole", "web-ui.log")
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte("No log file found yet."))
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write(content)
 }

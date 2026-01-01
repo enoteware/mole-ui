@@ -93,6 +93,23 @@ _request_password() {
     return 1
 }
 
+# Flag to indicate we're in GUI mode (no TTY) - operations should use osascript fallback
+export MOLE_GUI_MODE=""
+
+# GUI-based sudo authentication for non-interactive sessions (e.g., from web UI)
+# In GUI mode, we don't try to cache sudo - instead we set a flag so that
+# safe_sudo_remove() knows to use osascript with admin privileges for each operation
+request_sudo_via_gui() {
+    local prompt_msg="${1:-Mole requires administrator access to uninstall this app.}"
+
+    # Set flag to indicate GUI mode - file operations will use osascript
+    export MOLE_GUI_MODE="1"
+    debug_log "GUI mode enabled - file operations will use osascript with admin privileges"
+
+    # Return success - actual authentication happens per-operation in safe_sudo_remove()
+    return 0
+}
+
 request_sudo_access() {
     local prompt_msg="${1:-Admin access required}"
 
@@ -107,12 +124,22 @@ request_sudo_access() {
 
     # Get TTY path
     local tty_path="/dev/tty"
+    local has_tty=true
     if [[ ! -r "$tty_path" || ! -w "$tty_path" ]]; then
         tty_path=$(tty 2> /dev/null || echo "")
-        if [[ -z "$tty_path" || ! -r "$tty_path" || ! -w "$tty_path" ]]; then
-            log_error "No interactive terminal available"
-            return 1
+        if [[ -z "$tty_path" || "$tty_path" == "not a tty" || ! -r "$tty_path" || ! -w "$tty_path" ]]; then
+            has_tty=false
         fi
+    fi
+
+    # No TTY available → use GUI authentication via osascript
+    if [[ "$has_tty" == "false" ]]; then
+        debug_log "No TTY available, using GUI authentication"
+        if request_sudo_via_gui "$prompt_msg"; then
+            return 0
+        fi
+        log_error "GUI authentication failed or was cancelled"
+        return 1
     fi
 
     sudo -k
