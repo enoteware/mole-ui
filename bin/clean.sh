@@ -13,4 +13,3 @@ source "$ROOT_DIR/lib/core/common.sh"
 
 # Execute the actual clean script
 exec "$ROOT_DIR/lib/clean/batch.sh" "$@"
-

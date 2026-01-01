@@ -13,4 +13,3 @@ source "$ROOT_DIR/lib/core/common.sh"
 
 # Execute the actual optimize script
 exec "$ROOT_DIR/lib/optimize/batch.sh" "$@"
-
