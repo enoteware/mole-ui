@@ -180,7 +180,7 @@ func handlePerformUpdate(w http.ResponseWriter, r *http.Request) {
 		writeLog("ERROR: Unsupported update type: %s", req.Name)
 		result = CleanResult{Success: false, Message: "Unsupported update type"}
 	}
-	
+
 	writeLog("Update result for %s: Success=%v, Message=%s", req.Name, result.Success, result.Message)
 
 	w.Header().Set("Content-Type", "application/json")

@@ -156,7 +156,7 @@ safe_sudo_remove() {
         fi
 
         # Fallback to osascript if helper not found or failed
-        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2>/dev/null; then
+        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2> /dev/null; then
             return 0
         fi
 
@@ -171,8 +171,8 @@ safe_sudo_remove() {
         # Fallback: Try AppleScript (prompts user for password via GUI)
         # Only acts as fallback if non-interactive sudo failed
         debug_log "Sudo failed, attempting AppleScript fallback for: $path"
-        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2>/dev/null; then
-             return 0
+        if osascript -e "do shell script \"rm -rf \\\"$path\\\"\" with administrator privileges" 2> /dev/null; then
+            return 0
         fi
 
         log_error "Failed to remove (sudo): $path"
