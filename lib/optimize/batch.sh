@@ -100,9 +100,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # If no specific options given, show interactive menu or run all
-if [[ "$run_dns" == "false" && "$run_caches" == "false" && "$run_network" == "false" && \
-      "$run_maintenance" == "false" && "$run_snapshots" == "false" && \
-      "$run_prefs" == "false" && "$run_login" == "false" && "$run_all" == "false" ]]; then
+if [[ "$run_dns" == "false" && "$run_caches" == "false" && "$run_network" == "false" &&
+    "$run_maintenance" == "false" && "$run_snapshots" == "false" &&
+    "$run_prefs" == "false" && "$run_login" == "false" && "$run_all" == "false" ]]; then
     run_all=true
 fi
 

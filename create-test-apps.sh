@@ -48,7 +48,7 @@ EOF
     chmod +x "$app_path/Contents/MacOS/${name}"
 
     # Add some bulk (10MB of random data to make size visible)
-    dd if=/dev/zero of="$app_path/Contents/Resources/data.bin" bs=1024 count=10240 2>/dev/null
+    dd if=/dev/zero of="$app_path/Contents/Resources/data.bin" bs=1024 count=10240 2> /dev/null
 
     # Set ownership if root requested
     if [[ "$owner" == "root" ]]; then
@@ -68,10 +68,10 @@ create_app "MoleTest System App 3" "/Applications" "root"
 # Create some fake support files that the uninstaller should find
 echo "Creating fake support files..."
 mkdir -p ~/Library/Application\ Support/MoleTest\ User\ App\ 1
-dd if=/dev/zero of=~/Library/Application\ Support/MoleTest\ User\ App\ 1/data.db bs=1024 count=1024 2>/dev/null
+dd if=/dev/zero of=~/Library/Application\ Support/MoleTest\ User\ App\ 1/data.db bs=1024 count=1024 2> /dev/null
 
 mkdir -p ~/Library/Caches/com.moletest.MoleTestUserApp2
-dd if=/dev/zero of=~/Library/Caches/com.moletest.MoleTestUserApp2/cache.db bs=1024 count=512 2>/dev/null
+dd if=/dev/zero of=~/Library/Caches/com.moletest.MoleTestUserApp2/cache.db bs=1024 count=512 2> /dev/null
 
 mkdir -p ~/Library/Preferences
 touch ~/Library/Preferences/com.moletest.MoleTestSystemApp1.plist

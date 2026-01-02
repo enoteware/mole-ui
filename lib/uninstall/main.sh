@@ -32,7 +32,7 @@ scan_applications() {
         local size_kb=0
 
         if [[ -e "$app_path/Contents/Info.plist" ]]; then
-            bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "unknown")
+            bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2> /dev/null || echo "unknown")
         fi
 
         size_kb=$(get_path_size_kb "$app_path")
@@ -40,7 +40,7 @@ scan_applications() {
         # Format: index|path|name|bundle_id|size_kb|extra
         apps+=("$idx|$app_path|$app_name|$bundle_id|$size_kb|")
         ((idx++))
-    done < <(find /Applications -maxdepth 1 -name "*.app" -type d -print0 2>/dev/null | sort -z)
+    done < <(find /Applications -maxdepth 1 -name "*.app" -type d -print0 2> /dev/null | sort -z)
 
     # Scan ~/Applications if exists
     if [[ -d "$HOME/Applications" ]]; then
@@ -52,14 +52,14 @@ scan_applications() {
             local size_kb=0
 
             if [[ -e "$app_path/Contents/Info.plist" ]]; then
-                bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "unknown")
+                bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2> /dev/null || echo "unknown")
             fi
 
             size_kb=$(get_path_size_kb "$app_path")
 
             apps+=("$idx|$app_path|$app_name|$bundle_id|$size_kb|")
             ((idx++))
-        done < <(find "$HOME/Applications" -maxdepth 1 -name "*.app" -type d -print0 2>/dev/null | sort -z)
+        done < <(find "$HOME/Applications" -maxdepth 1 -name "*.app" -type d -print0 2> /dev/null | sort -z)
     fi
 
     printf '%s\n' "${apps[@]}"
@@ -77,15 +77,15 @@ show_app_menu() {
     local page=0
     local page_size=15
     local total=${#apps[@]}
-    local total_pages=$(( (total + page_size - 1) / page_size ))
+    local total_pages=$(((total + page_size - 1) / page_size))
 
     # Initialize selected array (all false)
-    for ((i=0; i<total; i++)); do
+    for ((i = 0; i < total; i++)); do
         selected[$i]=false
     done
 
     # Hide cursor
-    tput civis 2>/dev/null || true
+    tput civis 2> /dev/null || true
     trap 'tput cnorm 2>/dev/null || true' EXIT
 
     while true; do
@@ -101,7 +101,7 @@ show_app_menu() {
         [[ $end -gt $total ]] && end=$total
 
         # Display apps for current page
-        for ((i=start; i<end; i++)); do
+        for ((i = start; i < end; i++)); do
             local entry="${apps[$i]}"
             IFS='|' read -r idx app_path app_name bundle_id size_kb extra <<< "$entry"
 
@@ -144,59 +144,59 @@ show_app_menu() {
         IFS= read -r -s -n1 key
 
         case "$key" in
-            $'\x1b')  # Escape sequence
+            $'\x1b') # Escape sequence
                 read -r -s -n2 -t 0.1 seq || true
                 case "$seq" in
-                    '[A')  # Up arrow
+                    '[A') # Up arrow
                         ((current > 0)) && ((current--))
                         # Adjust page if needed
                         if [[ $current -lt $((page * page_size)) ]]; then
                             ((page > 0)) && ((page--))
                         fi
                         ;;
-                    '[B')  # Down arrow
+                    '[B') # Down arrow
                         ((current < total - 1)) && ((current++))
                         # Adjust page if needed
                         if [[ $current -ge $(((page + 1) * page_size)) ]]; then
                             ((page < total_pages - 1)) && ((page++))
                         fi
                         ;;
-                    '[5')  # Page Up
+                    '[5') # Page Up
                         read -r -s -n1 -t 0.1 _ || true
                         ((page > 0)) && ((page--))
                         current=$((page * page_size))
                         ;;
-                    '[6')  # Page Down
+                    '[6') # Page Down
                         read -r -s -n1 -t 0.1 _ || true
                         ((page < total_pages - 1)) && ((page++))
                         current=$((page * page_size))
                         ;;
                 esac
                 ;;
-            ' ')  # Space - toggle selection
+            ' ') # Space - toggle selection
                 if [[ "${selected[$current]}" == "true" ]]; then
                     selected[$current]=false
                 else
                     selected[$current]=true
                 fi
                 ;;
-            $'\n' | '')  # Enter - confirm
+            $'\n' | '') # Enter - confirm
                 if [[ $selected_count -gt 0 ]]; then
                     break
                 fi
                 ;;
-            'a' | 'A')  # Select all
-                for ((i=0; i<total; i++)); do
+            'a' | 'A') # Select all
+                for ((i = 0; i < total; i++)); do
                     selected[$i]=true
                 done
                 ;;
-            'n' | 'N')  # Select none
-                for ((i=0; i<total; i++)); do
+            'n' | 'N') # Select none
+                for ((i = 0; i < total; i++)); do
                     selected[$i]=false
                 done
                 ;;
-            'q' | 'Q')  # Quit
-                tput cnorm 2>/dev/null || true
+            'q' | 'Q') # Quit
+                tput cnorm 2> /dev/null || true
                 clear
                 echo "Cancelled"
                 exit 0
@@ -205,12 +205,12 @@ show_app_menu() {
     done
 
     # Show cursor again
-    tput cnorm 2>/dev/null || true
+    tput cnorm 2> /dev/null || true
     clear
 
     # Build selected_apps array for batch_uninstall_applications
     selected_apps=()
-    for ((i=0; i<total; i++)); do
+    for ((i = 0; i < total; i++)); do
         if [[ "${selected[$i]}" == "true" ]]; then
             selected_apps+=("${apps[$i]}")
         fi

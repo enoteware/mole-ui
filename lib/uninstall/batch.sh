@@ -358,7 +358,7 @@ batch_uninstall_applications() {
 
     # GUI mode: collect all sudo paths for batch deletion (single auth prompt)
     local -a sudo_paths_to_delete=()
-    local -a app_results=()  # Track which apps succeeded/failed
+    local -a app_results=() # Track which apps succeeded/failed
 
     for detail in "${app_details[@]}"; do
         IFS='|' read -r app_name app_path bundle_id total_kb encoded_files encoded_system_files has_sensitive_data needs_sudo <<< "$detail"
@@ -462,7 +462,7 @@ batch_uninstall_applications() {
         if [[ -n "$helper" && -x "$helper" ]]; then
             debug_log "Using privileged helper for batch delete"
             # Pass /bin/sh -c "rm command" to helper for batch operation
-            if "$helper" /bin/sh -c "$rm_cmd" 2>/dev/null; then
+            if "$helper" /bin/sh -c "$rm_cmd" 2> /dev/null; then
                 batch_success=true
             fi
         fi
@@ -472,7 +472,7 @@ batch_uninstall_applications() {
             debug_log "Using osascript for batch delete"
             local escaped_cmd="${rm_cmd//\\/\\\\}"
             escaped_cmd="${escaped_cmd//\"/\\\"}"
-            if osascript -e "do shell script \"${escaped_cmd}\" with administrator privileges" 2>/dev/null; then
+            if osascript -e "do shell script \"${escaped_cmd}\" with administrator privileges" 2> /dev/null; then
                 batch_success=true
             fi
         fi

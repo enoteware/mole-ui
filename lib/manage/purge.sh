@@ -33,7 +33,7 @@ get_installed_apps() {
         [[ -d "$app" ]] || continue
         local bundle_id=""
         if [[ -e "$app/Contents/Info.plist" ]]; then
-            bundle_id=$(defaults read "$app/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "")
+            bundle_id=$(defaults read "$app/Contents/Info.plist" CFBundleIdentifier 2> /dev/null || echo "")
         fi
         local name=$(basename "$app" .app)
         [[ -n "$bundle_id" ]] && apps+=("$bundle_id")
@@ -46,7 +46,7 @@ get_installed_apps() {
             [[ -d "$app" ]] || continue
             local bundle_id=""
             if [[ -e "$app/Contents/Info.plist" ]]; then
-                bundle_id=$(defaults read "$app/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "")
+                bundle_id=$(defaults read "$app/Contents/Info.plist" CFBundleIdentifier 2> /dev/null || echo "")
             fi
             local name=$(basename "$app" .app)
             [[ -n "$bundle_id" ]] && apps+=("$bundle_id")
@@ -71,16 +71,16 @@ is_orphan_candidate() {
 
     # Check if name matches any installed app
     if echo "$installed_apps" | grep -qi "^${dir_name}$"; then
-        return 1  # Not an orphan
+        return 1 # Not an orphan
     fi
 
     # Check partial bundle ID match
     local base_name="${dir_name%%.*}"
     if echo "$installed_apps" | grep -qi "${base_name}"; then
-        return 1  # Likely related to installed app
+        return 1 # Likely related to installed app
     fi
 
-    return 0  # Potential orphan
+    return 0 # Potential orphan
 }
 
 # Find orphaned files
@@ -102,7 +102,7 @@ find_orphans() {
                 orphans+=("$dir|$size_kb")
                 ((total_size += size_kb))
             fi
-        done < <(find "$location" -maxdepth 1 -type d ! -name "$(basename "$location")" -print0 2>/dev/null)
+        done < <(find "$location" -maxdepth 1 -type d ! -name "$(basename "$location")" -print0 2> /dev/null)
     done
 
     # Output orphans sorted by size (largest first)

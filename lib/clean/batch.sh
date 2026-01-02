@@ -26,15 +26,15 @@ VERBOSE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --dry-run|-n)
+        --dry-run | -n)
             DRY_RUN=true
             shift
             ;;
-        --yes|-y)
+        --yes | -y)
             YES_MODE=true
             shift
             ;;
-        --cache|--caches)
+        --cache | --caches)
             CLEAN_CACHE=true
             shift
             ;;
@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
             CLEAN_ALL=true
             shift
             ;;
-        --verbose|-v)
+        --verbose | -v)
             VERBOSE=true
             shift
             ;;
@@ -89,7 +89,7 @@ clean_caches() {
     echo ""
     log_section "Cleaning Caches"
 
-    local before_size=$(get_path_size_kb "$HOME/Library/Caches" 2>/dev/null || echo "0")
+    local before_size=$(get_path_size_kb "$HOME/Library/Caches" 2> /dev/null || echo "0")
 
     # Clean user caches
     if [[ -d "$HOME/Library/Caches" ]]; then
@@ -97,7 +97,7 @@ clean_caches() {
             echo "Would clean: ~/Library/Caches"
         else
             # Safe cache cleaning - only old files
-            find "$HOME/Library/Caches" -type f -mtime +7 -delete 2>/dev/null || true
+            find "$HOME/Library/Caches" -type f -mtime +7 -delete 2> /dev/null || true
             log_success "User caches cleaned"
         fi
     fi
@@ -111,12 +111,12 @@ clean_caches() {
             if [[ "$DRY_RUN" == "true" ]]; then
                 echo "Would clean: $cache_dir"
             else
-                find "$cache_dir" -type f -mtime +3 -delete 2>/dev/null || true
+                find "$cache_dir" -type f -mtime +3 -delete 2> /dev/null || true
             fi
         fi
     done
 
-    local after_size=$(get_path_size_kb "$HOME/Library/Caches" 2>/dev/null || echo "0")
+    local after_size=$(get_path_size_kb "$HOME/Library/Caches" 2> /dev/null || echo "0")
     local freed=$((before_size - after_size))
     [[ $freed -gt 0 ]] && TOTAL_FREED=$((TOTAL_FREED + freed))
 
@@ -134,15 +134,15 @@ clean_logs() {
 
     for log_dir in "${log_dirs[@]}"; do
         if [[ -d "$log_dir" ]]; then
-            local before_size=$(get_path_size_kb "$log_dir" 2>/dev/null || echo "0")
+            local before_size=$(get_path_size_kb "$log_dir" 2> /dev/null || echo "0")
 
             if [[ "$DRY_RUN" == "true" ]]; then
                 echo "Would clean: $log_dir"
             else
-                find "$log_dir" -type f \( -name "*.log" -o -name "*.crash" \) -mtime +7 -delete 2>/dev/null || true
+                find "$log_dir" -type f \( -name "*.log" -o -name "*.crash" \) -mtime +7 -delete 2> /dev/null || true
             fi
 
-            local after_size=$(get_path_size_kb "$log_dir" 2>/dev/null || echo "0")
+            local after_size=$(get_path_size_kb "$log_dir" 2> /dev/null || echo "0")
             local freed=$((before_size - after_size))
             [[ $freed -gt 0 ]] && TOTAL_FREED=$((TOTAL_FREED + freed))
         fi
@@ -158,20 +158,20 @@ clean_downloads() {
     local downloads_dir="$HOME/Downloads"
 
     if [[ -d "$downloads_dir" ]]; then
-        local before_size=$(get_path_size_kb "$downloads_dir" 2>/dev/null || echo "0")
+        local before_size=$(get_path_size_kb "$downloads_dir" 2> /dev/null || echo "0")
 
         # Only clean old DMG, ZIP, and installer files
         local patterns=("*.dmg" "*.pkg" "*.zip" "*.tar.gz" "*.tgz")
 
         for pattern in "${patterns[@]}"; do
             if [[ "$DRY_RUN" == "true" ]]; then
-                find "$downloads_dir" -maxdepth 1 -name "$pattern" -mtime +30 -print 2>/dev/null || true
+                find "$downloads_dir" -maxdepth 1 -name "$pattern" -mtime +30 -print 2> /dev/null || true
             else
-                find "$downloads_dir" -maxdepth 1 -name "$pattern" -mtime +30 -delete 2>/dev/null || true
+                find "$downloads_dir" -maxdepth 1 -name "$pattern" -mtime +30 -delete 2> /dev/null || true
             fi
         done
 
-        local after_size=$(get_path_size_kb "$downloads_dir" 2>/dev/null || echo "0")
+        local after_size=$(get_path_size_kb "$downloads_dir" 2> /dev/null || echo "0")
         local freed=$((before_size - after_size))
         [[ $freed -gt 0 ]] && TOTAL_FREED=$((TOTAL_FREED + freed))
 
@@ -191,12 +191,12 @@ clean_xcode() {
 
     for xcode_dir in "${xcode_dirs[@]}"; do
         if [[ -d "$xcode_dir" ]]; then
-            local size=$(get_path_size_kb "$xcode_dir" 2>/dev/null || echo "0")
+            local size=$(get_path_size_kb "$xcode_dir" 2> /dev/null || echo "0")
 
             if [[ "$DRY_RUN" == "true" ]]; then
                 echo "Would clean: $xcode_dir ($(format_size_kb $size))"
             else
-                rm -rf "$xcode_dir"/* 2>/dev/null || true
+                rm -rf "$xcode_dir"/* 2> /dev/null || true
                 TOTAL_FREED=$((TOTAL_FREED + size))
                 log_success "Cleaned $(basename "$xcode_dir")"
             fi
