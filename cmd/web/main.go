@@ -178,6 +178,7 @@ func main() {
 	http.HandleFunc("/api/app/icon", handleAppIcon) // No auth needed for icons
 	http.HandleFunc("/api/analyze", basicAuth(handleAnalyze))
 	http.HandleFunc("/api/analyze/large", basicAuth(handleAnalyzeLarge))
+	http.HandleFunc("/api/analyze/downloads", basicAuth(handleAnalyzeDownloads))
 	http.HandleFunc("/api/storage/breakdown", basicAuth(handleStorageBreakdown))
 	http.HandleFunc("/api/volumes", basicAuth(handleListVolumes))
 	http.HandleFunc("/api/volumes/analyze", basicAuth(handleAnalyzeVolume))
@@ -195,6 +196,8 @@ func main() {
 	http.HandleFunc("/api/purge/scan", basicAuth(handlePurgeScan))
 	http.HandleFunc("/api/status/stream", basicAuth(handleStatusStream))
 	http.HandleFunc("/api/logs", basicAuth(handleLogsStream))
+	http.HandleFunc("/api/files", basicAuth(handleDeleteFiles))
+	http.HandleFunc("/api/apps/unsupported", basicAuth(handleUnsupportedApps))
 
 	// Determine bind address
 	bindHost := *hostAddr
@@ -557,26 +560,63 @@ func listApplications() []AppInfo {
 		cwd,
 	}
 
+	// Helper to add an app if valid
+	addApp := func(path string) {
+		if isProtectedAppPath(path) {
+			return
+		}
+		name := strings.TrimSuffix(filepath.Base(path), ".app")
+		size := getDirSize(path)
+		apps = append(apps, AppInfo{
+			Name:      name,
+			Path:      path,
+			Size:      size,
+			SizeHuman: formatBytes(size),
+		})
+	}
+
 	for _, dir := range appDirs {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
 		for _, entry := range entries {
-			if !strings.HasSuffix(entry.Name(), ".app") {
-				continue
-			}
 			path := filepath.Join(dir, entry.Name())
-			if isProtectedAppPath(path) {
+
+			// Direct .app bundle at top level
+			if strings.HasSuffix(entry.Name(), ".app") {
+				addApp(path)
 				continue
 			}
-			size := getDirSize(path)
-			apps = append(apps, AppInfo{
-				Name:      strings.TrimSuffix(entry.Name(), ".app"),
-				Path:      path,
-				Size:      size,
-				SizeHuman: formatBytes(size),
-			})
+
+			// Check subdirectories for .app bundles (e.g., Adobe, Native Instruments)
+			// Skip Utilities folder (Apple system apps)
+			if entry.IsDir() && entry.Name() != "Utilities" {
+				subEntries, err := os.ReadDir(path)
+				if err != nil {
+					continue
+				}
+				for _, subEntry := range subEntries {
+					if strings.HasSuffix(subEntry.Name(), ".app") {
+						subPath := filepath.Join(path, subEntry.Name())
+						addApp(subPath)
+					}
+					// Check one more level deep (e.g., /Applications/Adobe/Subfolder/App.app)
+					if subEntry.IsDir() && !strings.HasSuffix(subEntry.Name(), ".app") {
+						level2Path := filepath.Join(path, subEntry.Name())
+						level2Entries, err := os.ReadDir(level2Path)
+						if err != nil {
+							continue
+						}
+						for _, level2Entry := range level2Entries {
+							if strings.HasSuffix(level2Entry.Name(), ".app") {
+								level2AppPath := filepath.Join(level2Path, level2Entry.Name())
+								addApp(level2AppPath)
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	return apps
@@ -949,6 +989,45 @@ func handleOpenFinder(w http.ResponseWriter, r *http.Request) {
 
 var errStopWalk = fmt.Errorf("stop walk")
 
+// isCompactLargeFolder returns true for folder types that should be shown as single items
+// (not drilled into) because they contain many small files
+func isCompactLargeFolder(name string) bool {
+	compactFolders := []string{
+		"node_modules",
+		".git",
+		"vendor",
+		"Pods",
+		"DerivedData",
+		"Build",
+		"build",
+		"dist",
+		"target",
+		"__pycache__",
+		".venv",
+		"venv",
+		"env",
+		".cache",
+		"cache",
+		"Cache",
+		"Caches",
+		".npm",
+		".yarn",
+		".pnpm-store",
+		"go",
+		".cargo",
+		".rustup",
+		".gradle",
+		".m2",
+		".cocoapods",
+	}
+	for _, cf := range compactFolders {
+		if name == cf {
+			return true
+		}
+	}
+	return false
+}
+
 func handleAnalyzeLarge(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Query().Get("path")
 	if path == "" {
@@ -963,51 +1042,161 @@ func handleAnalyzeLarge(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	largeFiles := make([]DirEntry, 0)
+	largeItems := make([]DirEntry, 0)
+	var topLevelFolders []string
+	var mu sync.Mutex
+
+	// Scan recursively to find large files and compact folders
 	filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip files we can't access
 		}
-		// Skip hidden files/dirs and common system paths
+
+		// Skip the root path itself
+		if filePath == path {
+			return nil
+		}
+
 		name := info.Name()
-		if strings.HasPrefix(name, ".") {
+
+		// Skip hidden files/dirs (but scan inside .Trash for large items)
+		if strings.HasPrefix(name, ".") && name != ".Trash" {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
 		}
+
 		// Skip Library folder to avoid system files
 		if name == "Library" && info.IsDir() {
 			return filepath.SkipDir
 		}
-		// Only include files (not dirs) over the minimum size
-		if !info.IsDir() && info.Size() >= minSize {
-			largeFiles = append(largeFiles, DirEntry{
-				Path:      filePath,
-				Name:      name,
-				Size:      info.Size(),
-				SizeHuman: formatBytes(info.Size()),
-				IsDir:     false,
-			})
+
+		if info.IsDir() {
+			parentDir := filepath.Dir(filePath)
+			isTopLevel := parentDir == path
+			isCompact := isCompactLargeFolder(name)
+
+			if isTopLevel {
+				// Collect top-level folders for parallel size calculation
+				topLevelFolders = append(topLevelFolders, filePath)
+			} else if isCompact {
+				// Calculate size for compact folders immediately
+				dirSize := getDirSizeWithLimit(filePath, 5)
+				if dirSize >= minSize {
+					largeItems = append(largeItems, DirEntry{
+						Path:      filePath,
+						Name:      name,
+						Size:      dirSize,
+						SizeHuman: formatBytes(dirSize),
+						IsDir:     true,
+					})
+				}
+				return filepath.SkipDir
+			}
+		} else {
+			// Regular file - add if large enough
+			if info.Size() >= minSize {
+				largeItems = append(largeItems, DirEntry{
+					Path:      filePath,
+					Name:      name,
+					Size:      info.Size(),
+					SizeHuman: formatBytes(info.Size()),
+					IsDir:     false,
+				})
+			}
 		}
-		// Limit to 100 files to avoid timeout
-		if len(largeFiles) >= 100 {
+
+		// Limit to 200 items to avoid timeout
+		if len(largeItems) >= 200 {
 			return errStopWalk
 		}
 		return nil
 	})
 
+	// Calculate top-level folder sizes in parallel
+	var wg sync.WaitGroup
+	for _, folderPath := range topLevelFolders {
+		wg.Add(1)
+		go func(fp string) {
+			defer wg.Done()
+			dirSize := getDirSizeWithLimit(fp, 5)
+			if dirSize >= minSize {
+				mu.Lock()
+				largeItems = append(largeItems, DirEntry{
+					Path:      fp,
+					Name:      filepath.Base(fp),
+					Size:      dirSize,
+					SizeHuman: formatBytes(dirSize),
+					IsDir:     true,
+				})
+				mu.Unlock()
+			}
+		}(folderPath)
+	}
+	wg.Wait()
+
 	// Sort by size descending
-	for i := 0; i < len(largeFiles); i++ {
-		for j := i + 1; j < len(largeFiles); j++ {
-			if largeFiles[j].Size > largeFiles[i].Size {
-				largeFiles[i], largeFiles[j] = largeFiles[j], largeFiles[i]
+	for i := 0; i < len(largeItems); i++ {
+		for j := i + 1; j < len(largeItems); j++ {
+			if largeItems[j].Size > largeItems[i].Size {
+				largeItems[i], largeItems[j] = largeItems[j], largeItems[i]
 			}
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(largeFiles)
+	json.NewEncoder(w).Encode(largeItems)
+}
+
+// handleAnalyzeDownloads returns contents of ~/Downloads sorted by size
+func handleAnalyzeDownloads(w http.ResponseWriter, r *http.Request) {
+	downloadsPath := filepath.Join(os.Getenv("HOME"), "Downloads")
+
+	entries, err := os.ReadDir(downloadsPath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	result := make([]DirEntry, 0, len(entries))
+	for _, entry := range entries {
+		// Skip hidden files
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		size := info.Size()
+		if entry.IsDir() {
+			// Calculate directory size
+			size = getDirSize(filepath.Join(downloadsPath, entry.Name()))
+		}
+
+		result = append(result, DirEntry{
+			Path:      filepath.Join(downloadsPath, entry.Name()),
+			Name:      entry.Name(),
+			Size:      size,
+			SizeHuman: formatBytes(size),
+			IsDir:     entry.IsDir(),
+		})
+	}
+
+	// Sort by size descending
+	for i := 0; i < len(result); i++ {
+		for j := i + 1; j < len(result); j++ {
+			if result[j].Size > result[i].Size {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 
 // Storage breakdown types
@@ -1069,18 +1258,18 @@ func handleStorageBreakdown(w http.ResponseWriter, r *http.Request) {
 		color string
 		icon  string
 	}{
-		{"Applications", "/Applications", "#3b82f6", "📱"},
-		{"Documents", filepath.Join(home, "Documents"), "#10b981", "📄"},
-		{"Downloads", filepath.Join(home, "Downloads"), "#f59e0b", "⬇️"},
-		{"Desktop", filepath.Join(home, "Desktop"), "#8b5cf6", "🖥️"},
-		{"Pictures", filepath.Join(home, "Pictures"), "#ec4899", "🖼️"},
-		{"Movies", filepath.Join(home, "Movies"), "#ef4444", "🎬"},
-		{"Music", filepath.Join(home, "Music"), "#06b6d4", "🎵"},
-		{"Code Projects", filepath.Join(home, "code"), "#22c55e", "💻"},
-		{"Docker Data", "/Volumes/data/docker", "#2563eb", "🐳"},
-		{"Media Hub", "/Volumes/data/media-hub", "#dc2626", "🎬"},
-		{"Photos Library", "/Volumes/data/Photos Library.photoslibrary", "#ec4899", "📸"},
-		{"System Library", filepath.Join(home, "Library"), "#6366f1", "📚"},
+		{"Applications", "/Applications", "#3b82f6", "apps"},
+		{"Documents", filepath.Join(home, "Documents"), "#10b981", "document"},
+		{"Downloads", filepath.Join(home, "Downloads"), "#f59e0b", "download"},
+		{"Desktop", filepath.Join(home, "Desktop"), "#8b5cf6", "desktop"},
+		{"Pictures", filepath.Join(home, "Pictures"), "#ec4899", "image"},
+		{"Movies", filepath.Join(home, "Movies"), "#ef4444", "video"},
+		{"Music", filepath.Join(home, "Music"), "#06b6d4", "music"},
+		{"Code Projects", filepath.Join(home, "code"), "#22c55e", "code"},
+		{"Docker Data", "/Volumes/data/docker", "#2563eb", "docker"},
+		{"Media Hub", "/Volumes/data/media-hub", "#dc2626", "video"},
+		{"Photos Library", "/Volumes/data/Photos Library.photoslibrary", "#ec4899", "camera"},
+		{"System Library", filepath.Join(home, "Library"), "#6366f1", "library"},
 	}
 
 	for _, cat := range categories {
@@ -1583,6 +1772,228 @@ func formatBytes(b int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+// Delete files/folders API
+type DeleteRequest struct {
+	Paths []string `json:"paths"`
+}
+
+type DeleteResult struct {
+	Success      bool     `json:"success"`
+	DeletedCount int      `json:"deleted_count"`
+	DeletedSize  int64    `json:"deleted_size"`
+	SizeHuman    string   `json:"size_human"`
+	Failed       []string `json:"failed,omitempty"`
+	Errors       []string `json:"errors,omitempty"`
+}
+
+func isProtectedPath(path string) bool {
+	protectedPrefixes := []string{
+		"/System",
+		"/Library",
+		"/usr",
+		"/bin",
+		"/sbin",
+		"/private",
+		"/var",
+		"/etc",
+	}
+	for _, prefix := range protectedPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	// Protect Apple apps in /Applications
+	if strings.HasPrefix(path, "/Applications/") && isProtectedAppPath(path) {
+		return true
+	}
+	return false
+}
+
+func handleDeleteFiles(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" && r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req DeleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if len(req.Paths) == 0 {
+		http.Error(w, "No paths specified", http.StatusBadRequest)
+		return
+	}
+
+	result := DeleteResult{}
+
+	for _, path := range req.Paths {
+		// Safety check: prevent deleting protected paths
+		if isProtectedPath(path) {
+			result.Failed = append(result.Failed, path)
+			result.Errors = append(result.Errors, "Protected system path")
+			continue
+		}
+
+		// Verify path exists
+		info, err := os.Stat(path)
+		if os.IsNotExist(err) {
+			result.Failed = append(result.Failed, path)
+			result.Errors = append(result.Errors, "Path does not exist")
+			continue
+		}
+
+		// Get size before deletion
+		var size int64
+		if info.IsDir() {
+			size = getDirSize(path)
+		} else {
+			size = info.Size()
+		}
+
+		// Delete the file/folder
+		if err := os.RemoveAll(path); err != nil {
+			result.Failed = append(result.Failed, path)
+			result.Errors = append(result.Errors, err.Error())
+		} else {
+			result.DeletedCount++
+			result.DeletedSize += size
+			writeLog("Deleted: %s (%s)", path, formatBytes(size))
+		}
+	}
+
+	result.Success = len(result.Failed) == 0
+	result.SizeHuman = formatBytes(result.DeletedSize)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// Unsupported apps detection (Intel apps on Apple Silicon)
+type UnsupportedApp struct {
+	Name          string   `json:"name"`
+	Path          string   `json:"path"`
+	Size          int64    `json:"size"`
+	SizeHuman     string   `json:"size_human"`
+	Architectures []string `json:"architectures"`
+	Reason        string   `json:"reason"`
+}
+
+func getAppArchitectures(appPath string) ([]string, error) {
+	// Find the main executable in the app bundle
+	execDir := filepath.Join(appPath, "Contents", "MacOS")
+	entries, err := os.ReadDir(execDir)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("no executable found")
+	}
+
+	// Usually the first entry is the main executable
+	executable := filepath.Join(execDir, entries[0].Name())
+
+	// Run lipo -archs to get architectures
+	cmd := exec.Command("lipo", "-archs", executable)
+	output, err := cmd.Output()
+	if err != nil {
+		// Fallback to file command
+		cmd = exec.Command("file", executable)
+		output, err = cmd.Output()
+		if err != nil {
+			return nil, err
+		}
+		// Parse file output for architectures
+		outputStr := string(output)
+		var archs []string
+		if strings.Contains(outputStr, "x86_64") {
+			archs = append(archs, "x86_64")
+		}
+		if strings.Contains(outputStr, "arm64") {
+			archs = append(archs, "arm64")
+		}
+		return archs, nil
+	}
+
+	// Parse lipo output: "x86_64 arm64" -> ["x86_64", "arm64"]
+	archStr := strings.TrimSpace(string(output))
+	return strings.Fields(archStr), nil
+}
+
+func handleUnsupportedApps(w http.ResponseWriter, r *http.Request) {
+	// Check if we're on Apple Silicon
+	isAppleSilicon := runtime.GOARCH == "arm64"
+
+	var unsupported []UnsupportedApp
+
+	appDirs := []string{
+		"/Applications",
+		filepath.Join(os.Getenv("HOME"), "Applications"),
+	}
+
+	for _, dir := range appDirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			if !strings.HasSuffix(entry.Name(), ".app") {
+				continue
+			}
+
+			appPath := filepath.Join(dir, entry.Name())
+
+			// Skip system apps
+			if isProtectedAppPath(appPath) {
+				continue
+			}
+
+			archs, err := getAppArchitectures(appPath)
+			if err != nil {
+				continue
+			}
+
+			// On Apple Silicon, flag apps that are Intel-only
+			if isAppleSilicon {
+				hasARM := false
+				for _, arch := range archs {
+					if arch == "arm64" {
+						hasARM = true
+						break
+					}
+				}
+
+				if !hasARM && len(archs) > 0 {
+					size := getDirSize(appPath)
+					unsupported = append(unsupported, UnsupportedApp{
+						Name:          strings.TrimSuffix(entry.Name(), ".app"),
+						Path:          appPath,
+						Size:          size,
+						SizeHuman:     formatBytes(size),
+						Architectures: archs,
+						Reason:        "Intel-only app (runs via Rosetta 2)",
+					})
+				}
+			}
+		}
+	}
+
+	// Sort by size descending
+	for i := 0; i < len(unsupported); i++ {
+		for j := i + 1; j < len(unsupported); j++ {
+			if unsupported[j].Size > unsupported[i].Size {
+				unsupported[i], unsupported[j] = unsupported[j], unsupported[i]
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(unsupported)
 }
 
 func handleDebugLogs(w http.ResponseWriter, r *http.Request) {

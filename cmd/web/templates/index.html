@@ -35,6 +35,69 @@
                 }
             }
         }
+
+        // Mole Icon System - Custom SVG icons with organic, friendly strokes
+        const MoleIcons = {
+            // Base wrapper for consistent sizing
+            _wrap: (paths, size = '5') => `<svg class="w-${size} h-${size} inline-block flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`,
+
+            // Modal & UI Icons
+            question: (s='5') => MoleIcons._wrap('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/>', s),
+            lock: (s='5') => MoleIcons._wrap('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', s),
+            unlock: (s='5') => MoleIcons._wrap('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>', s),
+            shield: (s='5') => MoleIcons._wrap('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4m0 4h.01"/>', s),
+            disk: (s='5') => MoleIcons._wrap('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>', s),
+            home: (s='5') => MoleIcons._wrap('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', s),
+            settings: (s='5') => MoleIcons._wrap('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>', s),
+
+            // Storage & Category Icons
+            folder: (s='5') => MoleIcons._wrap('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>', s),
+            folderOpen: (s='5') => MoleIcons._wrap('<path d="M5 19a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h9a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l1-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2l-1 7a2 2 0 0 0 2 2z"/>', s),
+            apps: (s='5') => MoleIcons._wrap('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>', s),
+            document: (s='5') => MoleIcons._wrap('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>', s),
+            download: (s='5') => MoleIcons._wrap('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>', s),
+            desktop: (s='5') => MoleIcons._wrap('<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>', s),
+            image: (s='5') => MoleIcons._wrap('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>', s),
+            video: (s='5') => MoleIcons._wrap('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/>', s),
+            music: (s='5') => MoleIcons._wrap('<circle cx="5.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="15.5" r="2.5"/><path d="M8 17V5l12-2v12"/>', s),
+            code: (s='5') => MoleIcons._wrap('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/>', s),
+            docker: (s='5') => MoleIcons._wrap('<path d="M22 12.5c-.5-.3-1.7-.5-2.5-.4-.2-1.1-.8-2-1.6-2.7l-.3-.2-.2.3c-.4.6-.6 1.5-.5 2.2.1.5.2 1 .5 1.4-.4.2-.8.4-1.2.5-.6.2-1.2.2-1.8.2H2.1l-.1.5c-.1 1.3.1 2.6.6 3.8.6 1.3 1.5 2.2 2.8 2.8 1.5.7 3.9.8 6.1.2 1.7-.4 3.2-1.2 4.5-2.3 1.1-1 2-2.2 2.6-3.5.8 0 1.6-.1 2.3-.4.4-.2.8-.5 1.2-.9l.2-.3-.3-.2z"/><rect x="5" y="10" width="2" height="2"/><rect x="8" y="10" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/><rect x="8" y="7" width="2" height="2"/><rect x="11" y="7" width="2" height="2"/><rect x="14" y="7" width="2" height="2"/><rect x="14" y="10" width="2" height="2"/><rect x="17" y="10" width="2" height="2"/><rect x="11" y="4" width="2" height="2"/>', s),
+            camera: (s='5') => MoleIcons._wrap('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>', s),
+            library: (s='5') => MoleIcons._wrap('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8m-8 4h6"/>', s),
+
+            // File Type Icons
+            pdf: (s='5') => MoleIcons._wrap('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15v-2h1a1 1 0 1 1 0 2H9zm5-2h1.5a1.5 1.5 0 0 1 0 3H14v1m0-4v4" fill="none"/>', s),
+            archive: (s='5') => MoleIcons._wrap('<path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>', s),
+            discMedia: (s='5') => MoleIcons._wrap('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 12L18 6"/>', s),
+            spreadsheet: (s='5') => MoleIcons._wrap('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8m-8 4h8m-8-8h2"/>', s),
+            presentation: (s='5') => MoleIcons._wrap('<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><path d="M7 10h3v3H7zm7-2h3v5h-3z"/>', s),
+
+            // Action & Status Icons
+            broom: (s='5') => MoleIcons._wrap('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>', s),
+            sparkles: (s='5') => MoleIcons._wrap('<path d="M12 3v1m0 16v1m-7-9H4m16 0h1M6.3 6.3l-.7-.7m12.1 0l.7-.7M6.3 17.7l-.7.7m12.1 0l.7.7"/><circle cx="12" cy="12" r="4"/>', s),
+            trash: (s='5') => MoleIcons._wrap('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>', s),
+            bolt: (s='5') => `<svg class="w-${s} h-${s} inline-block flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+            warning: (s='5') => MoleIcons._wrap('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5" fill="currentColor"/>', s),
+            lightbulb: (s='5') => MoleIcons._wrap('<path d="M9 18h6m-5 4h4m-2-16a6 6 0 0 0-4 10.5V18h8v-1.5A6 6 0 0 0 12 6z"/>', s),
+            party: (s='5') => MoleIcons._wrap('<path d="M5.8 11.3L2 22l10.7-3.8"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01"/><path d="M9.5 10L17 2.5l4.5 4.5-7.5 7.5"/><path d="M12 13l-2 2"/>', s),
+            checkCircle: (s='5') => MoleIcons._wrap('<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>', s),
+            check: (s='5') => MoleIcons._wrap('<polyline points="20 6 9 17 4 12"/>', s),
+            x: (s='5') => MoleIcons._wrap('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', s),
+            xCircle: (s='5') => MoleIcons._wrap('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', s),
+            hammer: (s='5') => MoleIcons._wrap('<path d="M15 12l-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15L22 10.64"/><path d="M20 5l-2-2m-7 1l2 2 6.5-1.5-1.5 6.5 2 2"/>', s),
+            cpu: (s='5') => MoleIcons._wrap('<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>', s),
+            rocket: (s='5') => MoleIcons._wrap('<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>', s),
+            developer: (s='5') => MoleIcons._wrap('<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/><path d="M9 8h6"/>', s),
+            package: (s='5') => MoleIcons._wrap('<path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4a2 2 0 0 1-1.1-1.8V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"/><polyline points="2.32 6.16 12 11 21.68 6.16"/><line x1="12" y1="22.76" x2="12" y2="11"/><line x1="7" y1="3.5" x2="17" y2="8.5"/>', s),
+            backup: (s='5') => MoleIcons._wrap('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>', s),
+            hardDrive: (s='5') => MoleIcons._wrap('<line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/>', s),
+        };
+
+        // Helper to get icon by name
+        function getIcon(name, size = '5') {
+            const iconFn = MoleIcons[name];
+            return iconFn ? iconFn(size) : MoleIcons.document(size);
+        }
     </script>
     <style>
         @keyframes pulse-slow {
@@ -95,8 +158,8 @@
     <div id="confirm-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         <div class="glass rounded-3xl p-8 max-w-md w-full border border-mole-500/30 shadow-2xl shadow-mole-500/20 animate-slide-up">
             <div class="text-center mb-6">
-                <div id="confirm-icon" class="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center text-3xl mx-auto mb-4 border border-zinc-700">
-                    ❓
+                <div id="confirm-icon" class="w-16 h-16 rounded-2xl bg-zinc-800 flex items-center justify-center mx-auto mb-4 border border-zinc-700 text-zinc-400">
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
                 </div>
                 <h3 id="confirm-title" class="text-xl font-bold text-zinc-100 mb-2">Confirmation Required</h3>
                 <p id="confirm-message" class="text-zinc-400">Are you sure you want to proceed?</p>
@@ -116,8 +179,8 @@
     <div id="permissions-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         <div class="glass rounded-3xl p-8 max-w-2xl w-full border border-mole-500/30 shadow-2xl shadow-mole-500/20 animate-slide-up">
             <div class="text-center mb-6">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-mole-400 to-mole-600 flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg shadow-mole-500/20">
-                    🔐
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-mole-400 to-mole-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-mole-500/20 text-white">
+                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
                 </div>
                 <h2 class="text-3xl font-bold mb-2 bg-gradient-to-r from-mole-300 to-mole-500 bg-clip-text text-transparent">
                     Welcome to Mole
@@ -129,8 +192,8 @@
             <div class="space-y-3 mb-6">
                 <!-- Full Disk Access -->
                 <div id="permission-fda" class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                        <span class="text-xl">💾</span>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-zinc-200">Full Disk Access</h3>
@@ -145,8 +208,8 @@
 
                 <!-- Home Directory -->
                 <div id="permission-home" class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                        <span class="text-xl">🏠</span>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-zinc-200">Home Folder Access</h3>
@@ -161,8 +224,8 @@
 
                 <!-- Admin Password -->
                 <div id="permission-admin" class="flex items-center gap-3 p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                        <span class="text-xl">🔒</span>
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-zinc-200">Admin Password</h3>
@@ -182,7 +245,7 @@
             <!-- Instructions -->
             <div id="permission-instructions" class="hidden mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
                 <h4 class="font-semibold text-amber-300 mb-2 flex items-center gap-2">
-                    <span>⚙️</span>
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     <span>How to Grant Full Disk Access</span>
                 </h4>
                 <ol class="text-sm text-zinc-300 space-y-2 list-decimal list-inside">
@@ -196,7 +259,7 @@
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <button id="open-settings-btn" onclick="openSystemSettings()" class="hidden flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-                    <span>⚙️</span>
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     <span>Open System Settings</span>
                 </button>
                 <button id="check-permissions-btn" onclick="checkPermissions()" class="flex-1 px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl font-semibold transition-all">
@@ -394,7 +457,7 @@
                             <!-- Recommendations -->
                             <div id="health-recommendations" class="hidden">
                                 <div class="flex items-center gap-2 mb-3">
-                                    <span class="text-sm font-medium text-zinc-400">💡 Recommendations</span>
+                                    <span class="text-sm font-medium text-zinc-400 flex items-center gap-2"><svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6m-5 4h4m-2-16a6 6 0 0 0-4 10.5V18h8v-1.5A6 6 0 0 0 12 6z"/></svg>Recommendations</span>
                                 </div>
                                 <div id="recommendations-list" class="space-y-2">
                                     <!-- Populated by JS -->
@@ -406,7 +469,7 @@
                         <div class="glass rounded-2xl p-6 border border-zinc-800/50 mb-4">
                             <div class="flex items-center justify-between mb-5">
                                 <h3 class="text-lg font-semibold text-zinc-200 flex items-center gap-2">
-                                    <span class="text-xl">💾</span>
+                                    <svg class="w-5 h-5 text-mole-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
                                     Storage Breakdown
                                 </h3>
                                 <div class="text-right">
@@ -433,7 +496,7 @@
                         <div id="cleanup-suggestions-card" class="glass rounded-2xl p-6 border border-zinc-800/50 mb-4 hidden">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-semibold text-zinc-200 flex items-center gap-2">
-                                    <span class="text-xl">🧹</span>
+                                    <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                                     Quick Cleanup
                                 </h3>
                                 <span id="cleanup-total-size" class="text-sm font-semibold text-mole-400">-- available to free</span>
@@ -586,7 +649,7 @@
                         <!-- Tip -->
                         <div class="glass rounded-xl p-4 border border-zinc-800/50 mb-4">
                             <div class="flex items-start gap-3">
-                                <span class="text-lg">💡</span>
+                                <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6m-5 4h4m-2-16a6 6 0 0 0-4 10.5V18h8v-1.5A6 6 0 0 0 12 6z"/></svg>
                                 <div class="text-sm text-zinc-400">
                                     <strong class="text-zinc-300">Tip:</strong> Dragging apps to Trash often leaves behind settings and cache files.
                                     This tool removes everything, freeing up more space.
@@ -619,6 +682,23 @@
                                 </button>
                             </div>
 
+                            <!-- Sort Controls -->
+                            <div class="flex items-center gap-2 mb-3 text-xs text-zinc-500">
+                                <span>Sort by:</span>
+                                <button onclick="sortApps('name')" id="sort-name" class="sort-btn px-2 py-1 rounded-md hover:bg-zinc-800 transition-colors flex items-center gap-1">
+                                    Name
+                                    <svg class="sort-icon w-3 h-3 opacity-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                                    </svg>
+                                </button>
+                                <button onclick="sortApps('size')" id="sort-size" class="sort-btn px-2 py-1 rounded-md hover:bg-zinc-800 transition-colors flex items-center gap-1 bg-zinc-800 text-mole-400">
+                                    Size
+                                    <svg class="sort-icon w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                            </div>
+
                             <div id="apps-list" class="space-y-2 max-h-[400px] overflow-y-auto mb-4 pr-2">
                                 <div class="text-zinc-500 text-center py-12">Loading your apps...</div>
                             </div>
@@ -636,66 +716,199 @@
 
                     <!-- Analyze Tab -->
                     <section id="tab-analyze" class="tab-content hidden">
+                        <!-- Tab Header -->
                         <div class="mb-6">
-                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Find What's Using Space</h2>
-                            <p class="text-sm text-zinc-500">See which folders and files are taking up the most space on your Mac</p>
+                            <h2 class="text-2xl font-bold text-zinc-100 mb-1">Storage</h2>
+                            <p class="text-sm text-zinc-500">Manage storage and find files taking up space</p>
                         </div>
 
-                        <!-- Volume Selector -->
-                        <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-6">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl">
-                                    💾
+                        <!-- Sub-tabs Navigation (macOS-style) -->
+                        <div class="flex gap-1 mb-6 p-1 bg-zinc-800/50 rounded-xl border border-zinc-700/50 w-fit">
+                            <button onclick="showStorageSubTab('large-files')"
+                                    class="storage-subtab active px-4 py-2 rounded-lg text-sm font-medium transition-all bg-zinc-700 text-zinc-100"
+                                    data-subtab="large-files">
+                                Large Files
+                            </button>
+                            <button onclick="showStorageSubTab('downloads')"
+                                    class="storage-subtab px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-zinc-300"
+                                    data-subtab="downloads">
+                                Downloads
+                            </button>
+                            <button onclick="showStorageSubTab('unsupported')"
+                                    class="storage-subtab px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-zinc-300"
+                                    data-subtab="unsupported">
+                                Unsupported Apps
+                            </button>
+                            <button onclick="showStorageSubTab('browser')"
+                                    class="storage-subtab px-4 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400 hover:text-zinc-300"
+                                    data-subtab="browser">
+                                File Browser
+                            </button>
+                        </div>
+
+                        <!-- Progress Indicator (shared) -->
+                        <div id="analyze-progress" class="hidden mb-4 animate-slide-up">
+                            <div class="glass rounded-xl p-4 border border-emerald-500/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                                    <div class="flex-1">
+                                        <p id="analyze-progress-text" class="text-sm font-medium text-zinc-200">Scanning...</p>
+                                        <p id="analyze-progress-detail" class="text-xs text-zinc-500">This may take a moment</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-semibold text-zinc-200">Select Drive to Analyze</h3>
-                                    <p class="text-xs text-zinc-500">Choose which volume to scan for space usage</p>
-                                </div>
-                            </div>
-                            <div id="volumes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <!-- Volumes will be loaded here -->
                             </div>
                         </div>
 
-                        <!-- Volume Breakdown Results -->
-                        <div id="disk-result-section" class="hidden mb-6 animate-slide-up">
-                            <div class="glass rounded-2xl p-5 border border-purple-500/30">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-semibold text-zinc-200 flex items-center gap-2">
-                                        <span class="text-lg">💾</span>
-                                        Volume Breakdown
-                                    </h3>
-                                    <button onclick="document.getElementById('disk-result-section').classList.add('hidden')" class="text-xs text-zinc-500 hover:text-zinc-300">Hide</button>
+                        <!-- ========== LARGE FILES SUB-TAB ========== -->
+                        <div id="storage-subtab-large-files" class="storage-subtab-content">
+                            <!-- Header Card -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center text-red-400">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4a2 2 0 0 1-1.1-1.8V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"/><polyline points="2.32 6.16 12 11 21.68 6.16"/><line x1="12" y1="22.76" x2="12" y2="11"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-zinc-200">Large Files</h3>
+                                            <p class="text-xs text-zinc-500">Files taking up the most space on your Mac</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <select id="large-files-threshold" onchange="loadLargeFiles()"
+                                                class="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm">
+                                            <option value="104857600">Over 100 MB</option>
+                                            <option value="524288000">Over 500 MB</option>
+                                            <option value="1073741824">Over 1 GB</option>
+                                            <option value="5368709120">Over 5 GB</option>
+                                        </select>
+                                        <button onclick="loadLargeFiles()" class="px-4 py-2 bg-mole-600 hover:bg-mole-500 rounded-lg text-sm font-medium transition-colors">
+                                            Scan
+                                        </button>
+                                    </div>
                                 </div>
-                                <div id="disk-analysis-list" class="space-y-2 max-h-[400px] overflow-y-auto">
-                                    <div class="text-zinc-500 text-center py-4">Analyzing...</div>
+                            </div>
+
+                            <!-- Results List -->
+                            <div class="glass rounded-2xl border border-zinc-800/50 overflow-hidden">
+                                <div id="large-files-list" class="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
+                                    <div class="text-zinc-500 text-center py-12">
+                                        Click "Scan" to find large files on your Mac
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Selected Action Bar -->
+                            <div id="large-files-actions" class="hidden mt-4 flex items-center justify-between p-4 glass rounded-xl border border-red-500/30">
+                                <span id="large-files-selected-info" class="text-sm text-zinc-300">0 items selected</span>
+                                <button onclick="deleteSelectedFiles('large-files')" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-xl font-semibold transition-all">
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ========== DOWNLOADS SUB-TAB ========== -->
+                        <div id="storage-subtab-downloads" class="storage-subtab-content hidden">
+                            <!-- Header Card -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-blue-400">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-zinc-200">Downloads</h3>
+                                            <p class="text-xs text-zinc-500">Files in your Downloads folder, sorted by size</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="openPathInFinder(getUserHome() + '/Downloads')"
+                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h9a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l1-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2l-1 7a2 2 0 0 0 2 2z"/></svg>
+                                        <span>Open in Finder</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Results List -->
+                            <div class="glass rounded-2xl border border-zinc-800/50 overflow-hidden">
+                                <div id="downloads-list" class="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
+                                    <div class="text-zinc-500 text-center py-12">
+                                        Loading downloads...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Selected Action Bar -->
+                            <div id="downloads-actions" class="hidden mt-4 flex items-center justify-between p-4 glass rounded-xl border border-red-500/30">
+                                <span id="downloads-selected-info" class="text-sm text-zinc-300">0 items selected</span>
+                                <button onclick="deleteSelectedFiles('downloads')" class="px-6 py-2.5 bg-red-600 hover:bg-red-500 rounded-xl font-semibold transition-all">
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ========== UNSUPPORTED APPS SUB-TAB ========== -->
+                        <div id="storage-subtab-unsupported" class="storage-subtab-content hidden">
+                            <!-- Header Card -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-amber-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold text-zinc-200">Unsupported Apps</h3>
+                                        <p class="text-xs text-zinc-500">Apps that may not run natively on your Mac</p>
+                                    </div>
+                                    <button onclick="loadUnsupportedApps()" class="px-4 py-2 bg-mole-600 hover:bg-mole-500 rounded-lg text-sm font-medium transition-colors">
+                                        Scan Apps
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Info Banner -->
+                            <div class="glass rounded-xl p-4 border border-amber-500/30 mb-4 bg-amber-500/5">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6m-5 4h4m-2-16a6 6 0 0 0-4 10.5V18h8v-1.5A6 6 0 0 0 12 6z"/></svg>
+                                    <div class="text-sm text-zinc-400">
+                                        <strong class="text-amber-300">On Apple Silicon Macs:</strong>
+                                        Intel-only apps run through Rosetta 2 translation, which uses more memory and battery.
+                                        Consider finding native alternatives or removing unused Intel apps.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Results List -->
+                            <div class="glass rounded-2xl border border-zinc-800/50 overflow-hidden">
+                                <div id="unsupported-apps-list" class="divide-y divide-zinc-800 max-h-[500px] overflow-y-auto">
+                                    <div class="text-zinc-500 text-center py-12">
+                                        Click "Scan Apps" to find Intel-only applications
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Quick Actions -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <!-- Large Files Finder -->
-                            <div class="glass rounded-2xl p-5 border border-zinc-800/50">
+                        <!-- ========== FILE BROWSER SUB-TAB ========== -->
+                        <div id="storage-subtab-browser" class="storage-subtab-content hidden">
+                            <!-- Volume Selector -->
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-4">
                                 <div class="flex items-center gap-3 mb-4">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center text-xl">
-                                        📦
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-purple-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
                                     </div>
                                     <div>
-                                        <h3 class="font-semibold text-zinc-200">Find Large Files</h3>
-                                        <p class="text-xs text-zinc-500">Quickly find the biggest files on your Mac</p>
+                                        <h3 class="font-semibold text-zinc-200">Select Drive to Analyze</h3>
+                                        <p class="text-xs text-zinc-500">Choose which volume to scan for space usage</p>
                                     </div>
                                 </div>
-                                <button onclick="findLargeFiles()" class="w-full px-4 py-2.5 bg-gradient-to-r from-red-600/80 to-orange-600/80 hover:from-red-500 hover:to-orange-500 rounded-xl font-medium transition-all text-sm">
-                                    Find Files Over 100MB
-                                </button>
+                                <div id="volumes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    <!-- Volumes will be loaded here -->
+                                </div>
                             </div>
 
                             <!-- Quick Scan Locations -->
-                            <div class="glass rounded-2xl p-5 border border-zinc-800/50">
+                            <div class="glass rounded-2xl p-5 border border-zinc-800/50 mb-4">
                                 <div class="flex items-center gap-3 mb-4">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-xl">
-                                        📂
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-blue-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h9a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l1-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2l-1 7a2 2 0 0 0 2 2z"/></svg>
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-zinc-200">Quick Scan</h3>
@@ -717,61 +930,32 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Large Files Results -->
-                        <div id="large-files-section" class="hidden mb-4 animate-slide-up">
-                            <div class="glass rounded-2xl p-5 border border-red-500/30">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-semibold text-zinc-200 flex items-center gap-2">
-                                        <span class="text-lg">📦</span>
-                                        Large Files Found
-                                    </h3>
-                                    <button onclick="hideLargeFiles()" class="text-xs text-zinc-500 hover:text-zinc-300">Hide</button>
+                            <!-- Browse Section -->
+                            <div class="glass rounded-2xl p-6 border border-zinc-800/50">
+                                <h3 class="font-semibold text-zinc-300 mb-4">Browse Folders</h3>
+                                <div class="flex gap-3 mb-4">
+                                    <input type="text" id="analyze-path" value="" placeholder="Enter any folder path to explore..."
+                                        class="flex-1 px-4 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none text-sm font-mono placeholder:text-zinc-500">
+                                    <button onclick="analyzeDisk()"
+                                        class="px-6 py-2.5 bg-mole-600 hover:bg-mole-500 rounded-xl font-semibold transition-colors">
+                                        Scan
+                                    </button>
                                 </div>
-                                <div id="large-files-list" class="space-y-2 max-h-[300px] overflow-y-auto">
-                                    <div class="text-zinc-500 text-center py-4">Scanning...</div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Progress Indicator -->
-                        <div id="analyze-progress" class="hidden mb-4 animate-slide-up">
-                            <div class="glass rounded-xl p-4 border border-emerald-500/30">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-                                    <div class="flex-1">
-                                        <p id="analyze-progress-text" class="text-sm font-medium text-zinc-200">Scanning folders...</p>
-                                        <p id="analyze-progress-detail" class="text-xs text-zinc-500">This may take a moment for large folders</p>
+                                <div class="flex items-center justify-between gap-4 mb-4">
+                                    <div id="breadcrumb" class="flex items-center gap-1 text-sm flex-wrap font-mono flex-1 min-w-0"></div>
+                                    <button id="open-finder-btn" onclick="openInFinder()" class="hidden px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4l2 2h9a2 2 0 0 1 2 2v1M5 19h14a2 2 0 0 0 2-2l1-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2l-1 7a2 2 0 0 0 2 2z"/></svg>
+                                        <span>Open in Finder</span>
+                                    </button>
+                                </div>
+
+                                <div id="analyze-result" class="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+                                    <div class="text-zinc-500 text-center py-8">
+                                        <p class="mb-2">Use Quick Scan above or enter a path to get started</p>
+                                        <p class="text-xs">Click on folders to see what's inside them</p>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Browse Section -->
-                        <div class="glass rounded-2xl p-6 border border-zinc-800/50">
-                            <h3 class="font-semibold text-zinc-300 mb-4">Browse Folders</h3>
-                            <div class="flex gap-3 mb-4">
-                                <input type="text" id="analyze-path" value="" placeholder="Enter any folder path to explore..."
-                                    class="flex-1 px-4 py-2.5 bg-zinc-800/50 border border-zinc-700 rounded-xl focus:border-mole-500 focus:ring-1 focus:ring-mole-500 outline-none text-sm font-mono placeholder:text-zinc-500">
-                                <button onclick="analyzeDisk()"
-                                    class="px-6 py-2.5 bg-mole-600 hover:bg-mole-500 rounded-xl font-semibold transition-colors">
-                                    Scan
-                                </button>
-                            </div>
-
-                            <div class="flex items-center justify-between gap-4 mb-4">
-                                <div id="breadcrumb" class="flex items-center gap-1 text-sm flex-wrap font-mono flex-1 min-w-0"></div>
-                                <button id="open-finder-btn" onclick="openInFinder()" class="hidden px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 flex-shrink-0">
-                                    <span>📂</span>
-                                    <span>Open in Finder</span>
-                                </button>
-                            </div>
-
-                            <div id="analyze-result" class="space-y-1 max-h-[400px] overflow-y-auto pr-2">
-                                <div class="text-zinc-500 text-center py-8">
-                                    <p class="mb-2">Use Quick Scan above or enter a path to get started</p>
-                                    <p class="text-xs">Click on folders to see what's inside them</p>
                                 </div>
                             </div>
                         </div>
@@ -802,8 +986,8 @@
 
                             <div class="space-y-3 mb-6">
                                 <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
-                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center text-xl">
-                                        ⚡
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center text-amber-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                                     </div>
                                     <div>
                                         <h4 class="font-medium text-zinc-200">Refresh System Data</h4>
@@ -811,8 +995,8 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
-                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-xl">
-                                        🔄
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center text-blue-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                                     </div>
                                     <div>
                                         <h4 class="font-medium text-zinc-200">Free Up Memory</h4>
@@ -820,8 +1004,8 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/50">
-                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-xl">
-                                        🧹
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-purple-400">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                                     </div>
                                     <div>
                                         <h4 class="font-medium text-zinc-200">Run Maintenance Scripts</h4>
@@ -854,7 +1038,7 @@
                         <!-- Explanation for non-developers -->
                         <div class="glass rounded-xl p-4 border border-zinc-800/50 mb-4">
                             <div class="flex items-start gap-3">
-                                <span class="text-lg">👨‍💻</span>
+                                <svg class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
                                 <div class="text-sm text-zinc-400">
                                     <strong class="text-zinc-300">For developers:</strong> This finds <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">node_modules</code>,
                                     <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">build</code>, <code class="px-1.5 py-0.5 bg-zinc-800 rounded text-xs">.cache</code>,
@@ -1195,7 +1379,8 @@
         const activityLog = [];
 
         // Global confirmation handler (replacement for window.confirm which is blocked in some WebViews)
-        function showConfirm(message, title = 'Confirmation Required', icon = '❓') {
+        // icon can be an icon name ('broom', 'trash', 'question') or a custom SVG string
+        function showConfirm(message, title = 'Confirmation Required', icon = 'question') {
             return new Promise((resolve) => {
                 const modal = document.getElementById('confirm-modal');
                 const titleEl = document.getElementById('confirm-title');
@@ -1206,7 +1391,12 @@
 
                 titleEl.textContent = title;
                 messageEl.textContent = message;
-                iconEl.textContent = icon;
+                // Support icon names or custom SVG
+                if (MoleIcons[icon]) {
+                    iconEl.innerHTML = MoleIcons[icon]('8');
+                } else {
+                    iconEl.innerHTML = icon.startsWith('<svg') ? icon : MoleIcons.question('8');
+                }
                 modal.classList.remove('hidden');
 
                 const cleanup = (result) => {
@@ -1519,7 +1709,7 @@
                 return;
             }
 
-            if (!(await showConfirm('Are you sure you want to clean the selected categories?', 'System Cleanup', '🧹'))) return;
+            if (!(await showConfirm('Are you sure you want to clean the selected categories?', 'System Cleanup', 'broom'))) return;
 
             setTabStatus('clean', 'running');
             showProgress('clean', 'Cleaning system...', 'Removing cache and temporary files');
@@ -1578,6 +1768,50 @@
 
         // App uninstall functions
         let allApps = [];
+        let appSortField = 'size';
+        let appSortAsc = false; // false = descending (largest first for size)
+
+        function sortApps(field) {
+            if (appSortField === field) {
+                // Toggle direction if same field
+                appSortAsc = !appSortAsc;
+            } else {
+                // New field: name defaults asc, size defaults desc
+                appSortField = field;
+                appSortAsc = field === 'name';
+            }
+
+            // Update button styles
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('bg-zinc-800', 'text-mole-400');
+                btn.querySelector('.sort-icon').classList.add('opacity-0');
+            });
+
+            const activeBtn = document.getElementById('sort-' + field);
+            activeBtn.classList.add('bg-zinc-800', 'text-mole-400');
+            const icon = activeBtn.querySelector('.sort-icon');
+            icon.classList.remove('opacity-0');
+            // Rotate icon based on direction
+            icon.innerHTML = appSortAsc
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>';
+
+            // Re-render with current filter
+            filterApps();
+        }
+
+        function getSortedApps(apps) {
+            return [...apps].sort((a, b) => {
+                let cmp = 0;
+                if (appSortField === 'name') {
+                    cmp = a.name.localeCompare(b.name);
+                } else if (appSortField === 'size') {
+                    cmp = a.size - b.size;
+                }
+                return appSortAsc ? cmp : -cmp;
+            });
+        }
+
         async function loadApps() {
             const list = document.getElementById('apps-list');
             list.innerHTML = `<div class="space-y-2 animate-pulse">
@@ -1593,9 +1827,7 @@
                 const response = await fetch('/api/uninstall/apps');
                 if (!response.ok) throw new Error(`Server error: ${response.status}`);
                 allApps = await response.json();
-                // Sort by size, largest first
-                allApps.sort((a, b) => b.size - a.size);
-                renderApps(allApps);
+                renderApps(getSortedApps(allApps));
             } catch (err) {
                 showToast(`Failed to load applications: ${err.message}`, 'error');
                 list.innerHTML = '<div class="text-red-400 text-center py-12">Failed to load applications</div>';
@@ -1647,7 +1879,7 @@
         function filterApps() {
             const query = document.getElementById('app-search').value.toLowerCase();
             const filtered = allApps.filter(app => app.name.toLowerCase().includes(query));
-            renderApps(filtered);
+            renderApps(getSortedApps(filtered));
         }
 
         function updateUninstallBtn() {
@@ -1669,7 +1901,7 @@
                 return;
             }
 
-            if (!(await showConfirm(`Are you sure you want to uninstall ${apps.length} app(s)?`, 'App Uninstallation', '🗑️'))) {
+            if (!(await showConfirm(`Are you sure you want to uninstall ${apps.length} app(s)?`, 'App Uninstallation', 'trash'))) {
                 console.log('User cancelled');
                 return;
             }
@@ -1792,7 +2024,7 @@
                     list.innerHTML = data.categories.map(cat => `
                         <div class="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-800/50 transition-colors group">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <span class="text-2xl">${cat.icon}</span>
+                                <span class="text-2xl" style="color: ${cat.color}">${MoleIcons[cat.icon] ? MoleIcons[cat.icon]('6') : MoleIcons.folder('6')}</span>
                                 <div class="flex-1 min-w-0">
                                     <p class="font-medium text-zinc-200 truncate">${cat.name}</p>
                                     <p class="text-xs text-zinc-500">${cat.size_human}</p>
@@ -1858,7 +2090,7 @@
 
                 result.innerHTML = entries.map(entry => `
                     <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer transition-all border border-transparent hover:border-zinc-700/50" onclick="${entry.is_dir ? `analyzeDisk('${escapePath(entry.path)}')` : ''}">
-                        <span class="text-lg">${entry.is_dir ? '📁' : '📄'}</span>
+                        <span class="text-lg text-mole-400">${entry.is_dir ? MoleIcons.folder('5') : MoleIcons.document('5')}</span>
                         <div class="flex-1 min-w-0">
                             <span class="truncate block text-zinc-200">${entry.name}</span>
                         </div>
@@ -1929,63 +2161,423 @@
             return userHomeCache || '/Users';
         }
 
-        // Large files finder
-        async function findLargeFiles() {
-            const section = document.getElementById('large-files-section');
+        // ========== STORAGE SUB-TAB FUNCTIONS ==========
+
+        // Track current storage sub-tab
+        let currentStorageSubTab = 'large-files';
+
+        // Sub-tab navigation
+        function showStorageSubTab(name) {
+            // Hide all sub-tab content
+            document.querySelectorAll('.storage-subtab-content').forEach(el => el.classList.add('hidden'));
+            // Remove active from all sub-tab buttons
+            document.querySelectorAll('.storage-subtab').forEach(el => {
+                el.classList.remove('active', 'bg-zinc-700', 'text-zinc-100');
+                el.classList.add('text-zinc-400');
+            });
+
+            // Show selected sub-tab content
+            const content = document.getElementById('storage-subtab-' + name);
+            if (content) content.classList.remove('hidden');
+
+            // Mark button as active
+            const btn = document.querySelector(`[data-subtab="${name}"]`);
+            if (btn) {
+                btn.classList.add('active', 'bg-zinc-700', 'text-zinc-100');
+                btn.classList.remove('text-zinc-400');
+            }
+
+            currentStorageSubTab = name;
+
+            // Load data for sub-tab (only on first view or explicit refresh)
+            switch(name) {
+                case 'large-files':
+                    // Don't auto-load, user clicks Scan
+                    break;
+                case 'downloads':
+                    loadDownloads();
+                    break;
+                case 'unsupported':
+                    // Don't auto-load, user clicks Scan
+                    break;
+                case 'browser':
+                    loadVolumes();
+                    break;
+            }
+        }
+
+        // Get file type icon based on extension (returns SVG)
+        function getFileTypeIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const iconMap = {
+                // Video
+                'mp4': 'video', 'mov': 'video', 'avi': 'video', 'mkv': 'video', 'webm': 'video',
+                // Audio
+                'mp3': 'music', 'wav': 'music', 'aac': 'music', 'flac': 'music', 'm4a': 'music',
+                // Images
+                'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'heic': 'image', 'webp': 'image',
+                // Documents
+                'pdf': 'pdf', 'doc': 'document', 'docx': 'document', 'txt': 'document', 'rtf': 'document',
+                // Archives
+                'zip': 'archive', 'rar': 'archive', 'tar': 'archive', 'gz': 'archive', 'dmg': 'archive', '7z': 'archive',
+                // Apps
+                'app': 'apps', 'pkg': 'package', 'iso': 'discMedia',
+                // Spreadsheets
+                'xls': 'spreadsheet', 'xlsx': 'spreadsheet', 'csv': 'spreadsheet',
+                // Presentations
+                'ppt': 'presentation', 'pptx': 'presentation',
+                // Code
+                'js': 'code', 'ts': 'code', 'py': 'code', 'go': 'code', 'rs': 'code',
+            };
+            const iconName = iconMap[ext] || 'document';
+            return MoleIcons[iconName] ? MoleIcons[iconName]('5') : MoleIcons.document('5');
+        }
+
+        // Render a file/folder row (macOS-style)
+        function renderStorageRow(entry, type) {
+            const icon = entry.is_dir ? MoleIcons.folder('5') : getFileTypeIcon(entry.name);
+            const escapedPath = entry.path.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const escapedName = entry.name.replace(/'/g, "\\'");
+
+            return `
+                <div class="flex items-center gap-4 p-4 hover:bg-zinc-800/50 transition-colors group">
+                    <input type="checkbox" class="${type}-checkbox w-5 h-5 rounded text-red-500 bg-zinc-700 border-zinc-600 focus:ring-red-500"
+                           data-path="${entry.path}" data-size="${entry.size}" onchange="updateStorageSelection('${type}')">
+                    <div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 flex-shrink-0">
+                        ${icon}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-zinc-200 truncate">${entry.name}</p>
+                        <p class="text-xs text-zinc-500 truncate">${entry.path}</p>
+                    </div>
+                    <div class="text-right flex-shrink-0 w-24">
+                        <p class="text-lg font-semibold text-zinc-200">${entry.size_human}</p>
+                    </div>
+                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button onclick="openPathInFinder('${escapedPath}')" class="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-400" title="Show in Finder">
+                            ${MoleIcons.folderOpen('4')}
+                        </button>
+                        <button onclick="deleteSingleFile('${escapedPath}', '${escapedName}')"
+                                class="p-2 hover:bg-red-600/20 rounded-lg transition-colors text-red-400" title="Delete">
+                            ${MoleIcons.trash('4')}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load large files
+        async function loadLargeFiles() {
+            const threshold = document.getElementById('large-files-threshold')?.value || '104857600';
             const list = document.getElementById('large-files-list');
 
-            section.classList.remove('hidden');
-            list.innerHTML = '<div class="text-zinc-500 text-center py-4"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Scanning for large files... This may take a moment.</div>';
+            list.innerHTML = '<div class="text-zinc-500 text-center py-12"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Scanning for large files...</div>';
 
             setTabStatus('analyze', 'running');
-            const activityId = addActivity('analyze', 'Finding Large Files', 'Scanning your Mac for files over 100MB', 'running');
+            showProgress('analyze', 'Scanning...', 'Finding large files on your Mac');
 
             try {
-                const homePath = getUserHome();
-                console.log('Scanning path:', homePath);
-                const url = '/api/analyze/large?min_size=104857600&path=' + encodeURIComponent(homePath);
-                console.log('API URL:', url);
-
+                // Server uses $HOME by default, which is more reliable than guessing from hostname
+                const url = `/api/analyze/large?min_size=${threshold}`;
                 const response = await fetch(url);
-                console.log('Response status:', response.status);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const files = await response.json();
-                console.log('Files found:', files ? files.length : 'null');
 
+                hideProgress('analyze');
                 setTabStatus('analyze', 'complete');
                 setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
 
                 if (!files || !Array.isArray(files) || files.length === 0) {
-                    updateActivity(activityId, 'success', 'No large files found');
-                    list.innerHTML = '<div class="text-zinc-500 text-center py-4">No files over 100MB found. Nice and tidy!</div>';
+                    list.innerHTML = `<div class="text-zinc-500 text-center py-12 flex flex-col items-center gap-2"><span class="text-emerald-400">${MoleIcons.checkCircle('6')}</span>No large files found. Your Mac is tidy!</div>`;
                     return;
                 }
 
-                updateActivity(activityId, 'success', `Found ${files.length} large file(s)`);
-                list.innerHTML = files.slice(0, 20).map(file => `
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-all border border-transparent hover:border-zinc-700/50">
-                        <span class="text-lg">📄</span>
-                        <div class="flex-1 min-w-0">
-                            <span class="truncate block text-zinc-200 text-sm">${file.name}</span>
-                            <span class="text-xs text-zinc-500 truncate block">${file.path}</span>
-                        </div>
-                        <span class="text-sm font-semibold text-red-400 font-mono">${file.size_human}</span>
-                    </div>
-                `).join('') + (files.length > 20 ? `<div class="text-center text-xs text-zinc-500 py-2">Showing top 20 of ${files.length} files</div>` : '');
+                list.innerHTML = files.map(file => renderStorageRow(file, 'large-files')).join('');
+                showToast(`Found ${files.length} large file(s)`, 'success');
             } catch (err) {
                 console.error('Large files scan error:', err);
+                hideProgress('analyze');
                 setTabStatus('analyze', 'error');
-                updateActivity(activityId, 'error', 'Failed to scan for large files');
-                list.innerHTML = `<div class="text-red-400 text-center py-4">Failed to scan: ${err.message}</div>`;
+                list.innerHTML = `<div class="text-red-400 text-center py-12">Failed to scan: ${err.message}</div>`;
+            }
+        }
+
+        // Alias for backwards compatibility
+        async function findLargeFiles() {
+            showStorageSubTab('large-files');
+            await loadLargeFiles();
+        }
+
+        // Load downloads
+        async function loadDownloads() {
+            const list = document.getElementById('downloads-list');
+
+            list.innerHTML = '<div class="text-zinc-500 text-center py-12"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Loading downloads...</div>';
+
+            try {
+                // Use dedicated endpoint that uses server's $HOME/Downloads
+                const response = await fetch('/api/analyze/downloads');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const files = await response.json();
+
+                if (!files || !Array.isArray(files) || files.length === 0) {
+                    list.innerHTML = '<div class="text-zinc-500 text-center py-12">Downloads folder is empty</div>';
+                    return;
+                }
+
+                list.innerHTML = files.map(file => renderStorageRow(file, 'downloads')).join('');
+            } catch (err) {
+                console.error('Downloads load error:', err);
+                list.innerHTML = `<div class="text-red-400 text-center py-12">Failed to load: ${err.message}</div>`;
+            }
+        }
+
+        // Load unsupported apps
+        async function loadUnsupportedApps() {
+            const list = document.getElementById('unsupported-apps-list');
+
+            list.innerHTML = '<div class="text-zinc-500 text-center py-12"><div class="inline-block w-4 h-4 border-2 border-zinc-600 border-t-mole-400 rounded-full animate-spin mr-2"></div>Scanning applications...</div>';
+
+            setTabStatus('analyze', 'running');
+
+            try {
+                const response = await fetch('/api/apps/unsupported');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const apps = await response.json();
+
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
+
+                if (!apps || !Array.isArray(apps) || apps.length === 0) {
+                    list.innerHTML = `<div class="text-zinc-500 text-center py-12 flex flex-col items-center gap-2"><span class="text-emerald-400">${MoleIcons.party('8')}</span>All your apps are native! No Intel-only apps found.</div>`;
+                    return;
+                }
+
+                list.innerHTML = apps.map(app => renderUnsupportedAppRow(app)).join('');
+                showToast(`Found ${apps.length} Intel-only app(s)`, 'info');
+            } catch (err) {
+                console.error('Unsupported apps scan error:', err);
+                setTabStatus('analyze', 'error');
+                list.innerHTML = `<div class="text-red-400 text-center py-12">Failed to scan: ${err.message}</div>`;
+            }
+        }
+
+        // Render unsupported app row
+        function renderUnsupportedAppRow(app) {
+            const escapedPath = app.path.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+            return `
+                <div class="flex items-center gap-4 p-4 hover:bg-zinc-800/50 transition-colors group">
+                    <img src="/api/app/icon?path=${encodeURIComponent(app.path)}"
+                         class="w-12 h-12 rounded-xl" alt="${app.name}"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-12 h-12 rounded-xl bg-zinc-800 items-center justify-center text-mole-400 hidden">${MoleIcons.apps('6')}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-zinc-200">${app.name}</p>
+                        <p class="text-xs text-zinc-500">${app.reason}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${app.architectures.map(arch =>
+                            `<span class="px-2 py-1 text-xs rounded-md ${arch === 'x86_64' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}">${arch}</span>`
+                        ).join('')}
+                    </div>
+                    <div class="text-right w-20">
+                        <p class="font-semibold text-zinc-200">${app.size_human}</p>
+                    </div>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                        <button onclick="openPathInFinder('${escapedPath}')" class="p-2 hover:bg-zinc-700 rounded-lg text-mole-400" title="Show in Finder">
+                            ${MoleIcons.folderOpen('5')}
+                        </button>
+                        <button onclick="uninstallApp('${escapedPath}')"
+                                class="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update selection state for action bar
+        function updateStorageSelection(type) {
+            const checkboxes = document.querySelectorAll(`.${type}-checkbox:checked`);
+            const actionsBar = document.getElementById(`${type}-actions`);
+            const infoSpan = document.getElementById(`${type}-selected-info`);
+
+            if (checkboxes.length > 0) {
+                const totalSize = [...checkboxes].reduce((sum, cb) => sum + parseInt(cb.dataset.size || 0), 0);
+                infoSpan.textContent = `${checkboxes.length} item(s) selected (${formatBytes(totalSize)})`;
+                actionsBar.classList.remove('hidden');
+            } else {
+                actionsBar.classList.add('hidden');
+            }
+        }
+
+        // Delete single file
+        async function deleteSingleFile(path, name) {
+            if (!(await showConfirm(`Delete "${name}"?`, 'This action cannot be undone.', 'trash'))) {
+                return;
+            }
+
+            setTabStatus('analyze', 'running');
+
+            try {
+                const response = await fetch('/api/files', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paths: [path] })
+                });
+
+                const result = await response.json();
+
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
+
+                if (result.success) {
+                    showToast(`Deleted "${name}" (freed ${result.size_human})`, 'success');
+                    refreshCurrentStorageView();
+                } else {
+                    showToast(`Failed to delete: ${result.errors?.[0] || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                setTabStatus('analyze', 'error');
+                showToast(`Delete failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Delete selected files (bulk)
+        async function deleteSelectedFiles(type) {
+            const checkboxes = document.querySelectorAll(`.${type}-checkbox:checked`);
+            const paths = [...checkboxes].map(cb => cb.dataset.path);
+            const totalSize = [...checkboxes].reduce((sum, cb) => sum + parseInt(cb.dataset.size || 0), 0);
+
+            if (paths.length === 0) return;
+
+            if (!(await showConfirm(
+                `Delete ${paths.length} item(s)?`,
+                `This will free approximately ${formatBytes(totalSize)}. This action cannot be undone.`,
+                'trash'
+            ))) {
+                return;
+            }
+
+            setTabStatus('analyze', 'running');
+            showProgress('analyze', 'Deleting...', `Removing ${paths.length} item(s)`);
+
+            try {
+                const response = await fetch('/api/files', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paths })
+                });
+
+                const result = await response.json();
+
+                hideProgress('analyze');
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
+
+                if (result.deleted_count > 0) {
+                    showToast(`Deleted ${result.deleted_count} item(s), freed ${result.size_human}`, 'success');
+                }
+                if (result.failed && result.failed.length > 0) {
+                    showToast(`Failed to delete ${result.failed.length} item(s)`, 'error');
+                }
+
+                refreshCurrentStorageView();
+            } catch (err) {
+                hideProgress('analyze');
+                setTabStatus('analyze', 'error');
+                showToast(`Delete failed: ${err.message}`, 'error');
+            }
+        }
+
+        // Refresh current storage view after deletion
+        function refreshCurrentStorageView() {
+            switch(currentStorageSubTab) {
+                case 'large-files':
+                    loadLargeFiles();
+                    break;
+                case 'downloads':
+                    loadDownloads();
+                    break;
+                case 'unsupported':
+                    loadUnsupportedApps();
+                    break;
+                case 'browser':
+                    analyzeDisk();
+                    break;
+            }
+            // Hide action bars
+            document.querySelectorAll('[id$="-actions"]').forEach(el => el.classList.add('hidden'));
+        }
+
+        // Open path in Finder
+        async function openPathInFinder(path) {
+            try {
+                const response = await fetch('/api/open-finder?path=' + encodeURIComponent(path));
+                if (!response.ok) {
+                    throw new Error('Failed to open Finder');
+                }
+            } catch (err) {
+                showToast(`Failed to open in Finder: ${err.message}`, 'error');
+            }
+        }
+
+        // Uninstall app (uses existing uninstall infrastructure)
+        async function uninstallApp(appPath) {
+            const appName = appPath.split('/').pop().replace('.app', '');
+
+            if (!(await showConfirm(
+                `Remove "${appName}"?`,
+                'This will uninstall the app and remove its associated files.',
+                'trash'
+            ))) {
+                return;
+            }
+
+            setTabStatus('analyze', 'running');
+            showProgress('analyze', 'Uninstalling...', `Removing ${appName}`);
+
+            try {
+                const response = await fetch('/api/uninstall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apps: [appPath] })
+                });
+
+                const results = await response.json();
+
+                hideProgress('analyze');
+                setTabStatus('analyze', 'complete');
+                setTimeout(() => setTabStatus('analyze', 'idle'), 3000);
+
+                if (results[0]?.success) {
+                    showToast(`Removed "${appName}"`, 'success');
+                    loadUnsupportedApps();
+                } else {
+                    showToast(`Failed to remove: ${results[0]?.message || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                hideProgress('analyze');
+                setTabStatus('analyze', 'error');
+                showToast(`Uninstall failed: ${err.message}`, 'error');
             }
         }
 
         function hideLargeFiles() {
-            document.getElementById('large-files-section').classList.add('hidden');
+            // Legacy function - no longer needed with sub-tabs
         }
 
         // Optimize function
@@ -2148,7 +2740,7 @@
                     const path = cat.name === 'Applications' ? '/Applications' : getUserHome() + '/' + cat.name;
                     return `
                     <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors cursor-pointer group" onclick="showTab('analyze'); analyzeDisk('${path}')">
-                        <span class="text-lg">${cat.icon}</span>
+                        <span class="text-lg" style="color: ${cat.color}">${MoleIcons[cat.icon] ? MoleIcons[cat.icon]('5') : MoleIcons.folder('5')}</span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-zinc-300 group-hover:text-mole-400 transition-colors">${cat.name}</p>
                             <p class="text-xs text-zinc-500">${cat.size_human}</p>
@@ -2162,7 +2754,7 @@
                     </div>`;
                 }).join('') + `
                     <div class="flex items-center gap-3 p-2 rounded-lg opacity-60">
-                        <span class="text-lg">📦</span>
+                        <span class="text-lg text-zinc-400">${MoleIcons.package('5')}</span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-zinc-300">Other</p>
                             <p class="text-xs text-zinc-500">${formatBytes(otherSize)}</p>
@@ -2254,20 +2846,20 @@
             const recommendationsList = document.getElementById('recommendations-list');
 
             if (issues.length === 0) {
-                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-3xl';
-                healthIcon.textContent = '✓';
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center text-emerald-400';
+                healthIcon.innerHTML = MoleIcons.checkCircle('8');
                 healthTitle.textContent = 'Your Mac is running great!';
                 healthSubtitle.textContent = 'All systems are performing normally';
                 healthRecommendations.classList.add('hidden');
             } else if (issues.length <= 1 && !issues.some(i => i.includes('very') || i.includes('almost') || i.includes('nearly'))) {
-                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center text-3xl';
-                healthIcon.textContent = '⚡';
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 flex items-center justify-center text-amber-400';
+                healthIcon.innerHTML = MoleIcons.bolt('8');
                 healthTitle.textContent = 'Your Mac could be faster';
                 healthSubtitle.textContent = 'A few things could use attention';
                 healthRecommendations.classList.remove('hidden');
             } else {
-                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center text-3xl';
-                healthIcon.textContent = '⚠️';
+                healthIcon.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center text-red-400';
+                healthIcon.innerHTML = MoleIcons.warning('8');
                 healthTitle.textContent = 'Your Mac needs attention';
                 healthSubtitle.textContent = 'Some issues may be slowing things down';
                 healthRecommendations.classList.remove('hidden');
@@ -2280,7 +2872,7 @@
                 if (cpuUsage >= 70) {
                     recsHTML += `
                         <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
-                            <span class="text-amber-400">⚡</span>
+                            <span class="text-amber-400">${MoleIcons.bolt('5')}</span>
                             <p class="text-sm text-zinc-300 flex-1">High CPU usage - some apps may be working hard. Check Activity Monitor for details.</p>
                         </div>
                     `;
@@ -2289,7 +2881,7 @@
                 if (memPercent >= 75) {
                     recsHTML += `
                         <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
-                            <span class="text-amber-400">🧠</span>
+                            <span class="text-amber-400">${MoleIcons.cpu('5')}</span>
                             <p class="text-sm text-zinc-300 flex-1">Memory is ${memPercent >= 90 ? 'nearly full' : 'getting full'}. Try closing unused apps or run optimization.</p>
                             <button onclick="runOptimize(); showTab('optimize');" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors">Optimize</button>
                         </div>
@@ -2299,7 +2891,7 @@
                 if (diskPercent >= 80) {
                     recsHTML += `
                         <div class="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
-                            <span class="text-amber-400">💾</span>
+                            <span class="text-amber-400">${MoleIcons.hardDrive('5')}</span>
                             <p class="text-sm text-zinc-300 flex-1">Storage is ${diskPercent >= 95 ? 'critically low' : 'getting low'}. Free up space by cleaning junk files.</p>
                             <button onclick="showTab('clean')" class="px-2 py-1 text-xs bg-mole-600 hover:bg-mole-500 rounded transition-colors">Clean Up</button>
                         </div>

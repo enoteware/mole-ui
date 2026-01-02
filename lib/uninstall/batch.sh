@@ -321,25 +321,10 @@ batch_uninstall_applications() {
         esac
     fi
 
-    # User confirmed, now request sudo access if needed
-    if [[ ${#sudo_apps[@]} -gt 0 ]]; then
-        # In GUI mode (web UI), use osascript to cache sudo credentials ONCE
-        # This avoids prompting for each file removal
-        if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
-            # Check if sudo is already cached
-            if ! sudo -n true 2> /dev/null; then
-                debug_log "GUI mode: requesting admin privileges via osascript (one-time)"
-                # Use osascript to run 'sudo -v' which caches credentials for 5 minutes
-                if ! osascript -e 'do shell script "sudo -v" with administrator privileges' 2> /dev/null; then
-                    log_error "Admin access denied"
-                    return 1
-                fi
-                debug_log "GUI mode: sudo credentials cached successfully"
-            else
-                debug_log "GUI mode: sudo already cached, skipping auth dialog"
-            fi
+    # Request sudo access if needed (TTY mode only - GUI mode batches at end)
+    if [[ ${#sudo_apps[@]} -gt 0 && "${MOLE_GUI_MODE:-}" != "1" ]]; then
         # Check if sudo is already cached
-        elif ! sudo -n true 2> /dev/null; then
+        if ! sudo -n true 2> /dev/null; then
             if ! request_sudo_access "Admin required for system apps: ${sudo_apps[*]}"; then
                 echo ""
                 log_error "Admin access denied"
@@ -358,6 +343,7 @@ batch_uninstall_applications() {
             sudo_keepalive_pid=$!
         fi
     fi
+    # Note: GUI mode will prompt ONCE during batch delete at end of uninstall
 
     if [[ -t 1 ]]; then start_inline_spinner "Uninstalling apps..."; fi
 
@@ -369,6 +355,11 @@ batch_uninstall_applications() {
     local success_count=0 failed_count=0 files_cleaned=0 total_items=0
     local -a failed_items=()
     local -a success_items=()
+
+    # GUI mode: collect all sudo paths for batch deletion (single auth prompt)
+    local -a sudo_paths_to_delete=()
+    local -a app_results=()  # Track which apps succeeded/failed
+
     for detail in "${app_details[@]}"; do
         IFS='|' read -r app_name app_path bundle_id total_kb encoded_files encoded_system_files has_sensitive_data needs_sudo <<< "$detail"
         local related_files=$(decode_file_list "$encoded_files" "$app_name")
@@ -390,14 +381,23 @@ batch_uninstall_applications() {
         # Remove the application only if not running
         if [[ -z "$reason" ]]; then
             if [[ "$needs_sudo" == true ]]; then
-                if ! safe_sudo_remove "$app_path"; then
-                    # Determine specific failure reason (only fetch owner info when needed)
-                    local app_owner=$(get_file_owner "$app_path")
-                    local current_user=$(whoami)
-                    if [[ -n "$app_owner" && "$app_owner" != "$current_user" && "$app_owner" != "root" ]]; then
-                        reason="owned by $app_owner"
-                    else
-                        reason="permission denied"
+                # GUI mode: collect paths for batch deletion later
+                if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
+                    sudo_paths_to_delete+=("$app_path")
+                    # Also collect system files that need sudo
+                    while IFS= read -r sfile; do
+                        [[ -n "$sfile" && -e "$sfile" ]] && sudo_paths_to_delete+=("$sfile")
+                    done <<< "$system_files"
+                else
+                    # Non-GUI mode: delete immediately
+                    if ! safe_sudo_remove "$app_path"; then
+                        local app_owner=$(get_file_owner "$app_path")
+                        local current_user=$(whoami)
+                        if [[ -n "$app_owner" && "$app_owner" != "$current_user" && "$app_owner" != "root" ]]; then
+                            reason="owned by $app_owner"
+                        else
+                            reason="permission denied"
+                        fi
                     fi
                 fi
             else
@@ -405,25 +405,21 @@ batch_uninstall_applications() {
             fi
         fi
 
-        # Remove related files if app removal succeeded
+        # Remove related files if app removal succeeded (or will succeed after batch sudo)
         if [[ -z "$reason" ]]; then
-            # Remove user-level files
+            # Remove user-level files (no sudo needed)
             remove_file_list "$related_files" "false" > /dev/null
-            # Remove system-level files (requires sudo)
-            remove_file_list "$system_files" "true" > /dev/null
+
+            # System files: in GUI mode these are collected above; in TTY mode delete now
+            if [[ "${MOLE_GUI_MODE:-}" != "1" ]]; then
+                remove_file_list "$system_files" "true" > /dev/null
+            fi
 
             # Clean up macOS defaults (preference domain)
-            # This removes configuration data stored in the macOS defaults system
-            # Note: This complements plist file deletion by clearing cached preferences
             if [[ -n "$bundle_id" && "$bundle_id" != "unknown" ]]; then
-                # 1. Standard defaults domain cleanup
                 if defaults read "$bundle_id" &> /dev/null; then
                     defaults delete "$bundle_id" 2> /dev/null || true
                 fi
-
-                # 2. Clean up ByHost preferences (machine-specific configs)
-                # These are often missed by standard cleanup tools
-                # Format: ~/Library/Preferences/ByHost/com.app.id.XXXX.plist
                 if [[ -d ~/Library/Preferences/ByHost ]]; then
                     find ~/Library/Preferences/ByHost -maxdepth 1 -name "${bundle_id}.*.plist" -delete 2> /dev/null || true
                 fi
@@ -439,6 +435,52 @@ batch_uninstall_applications() {
             failed_items+=("$app_name:$reason")
         fi
     done
+
+    # GUI mode: batch delete all sudo paths with SINGLE auth prompt
+    if [[ "${MOLE_GUI_MODE:-}" == "1" && ${#sudo_paths_to_delete[@]} -gt 0 ]]; then
+        debug_log "GUI batch delete: ${#sudo_paths_to_delete[@]} paths"
+
+        # Build a single rm command with all paths
+        local rm_cmd="rm -rf"
+        for p in "${sudo_paths_to_delete[@]}"; do
+            # Shell-escape each path
+            local escaped_path="${p//\'/\'\\\'\'}"
+            rm_cmd+=" '${escaped_path}'"
+        done
+
+        # Find privileged helper
+        local helper=""
+        local script_dir
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+        if [[ -x "$script_dir/privileged-helper" ]]; then
+            helper="$script_dir/privileged-helper"
+        elif [[ -n "${MOLE_APP_RESOURCES:-}" && -x "${MOLE_APP_RESOURCES}/privileged-helper" ]]; then
+            helper="${MOLE_APP_RESOURCES}/privileged-helper"
+        fi
+
+        local batch_success=false
+        if [[ -n "$helper" && -x "$helper" ]]; then
+            debug_log "Using privileged helper for batch delete"
+            # Pass /bin/sh -c "rm command" to helper for batch operation
+            if "$helper" /bin/sh -c "$rm_cmd" 2>/dev/null; then
+                batch_success=true
+            fi
+        fi
+
+        # Fallback to osascript if helper failed
+        if [[ "$batch_success" != "true" ]]; then
+            debug_log "Using osascript for batch delete"
+            local escaped_cmd="${rm_cmd//\\/\\\\}"
+            escaped_cmd="${escaped_cmd//\"/\\\"}"
+            if osascript -e "do shell script \"${escaped_cmd}\" with administrator privileges" 2>/dev/null; then
+                batch_success=true
+            fi
+        fi
+
+        if [[ "$batch_success" != "true" ]]; then
+            log_warning "Batch sudo deletion failed - some files may remain"
+        fi
+    fi
 
     # Summary
     local freed_display

@@ -181,29 +181,29 @@ func analyzeVolumePath(volumePath string) VolumeAnalysis {
 func getCategoryStyle(name string) (color, icon string) {
 	name = strings.ToLower(name)
 
-	// Match common patterns
+	// Match common patterns - icon names correspond to MoleIcons in JavaScript
 	switch {
 	case strings.Contains(name, "docker"):
-		return "#2563eb", "🐳"
+		return "#2563eb", "docker"
 	case strings.Contains(name, "media") || strings.Contains(name, "movies") || strings.Contains(name, "videos"):
-		return "#dc2626", "🎬"
+		return "#dc2626", "video"
 	case strings.Contains(name, "photo") || strings.Contains(name, "pictures"):
-		return "#ec4899", "📸"
+		return "#ec4899", "camera"
 	case strings.Contains(name, "music") || strings.Contains(name, "audio"):
-		return "#06b6d4", "🎵"
+		return "#06b6d4", "music"
 	case strings.Contains(name, "code") || strings.Contains(name, "dev") || strings.Contains(name, "projects"):
-		return "#22c55e", "💻"
+		return "#22c55e", "code"
 	case strings.Contains(name, "document"):
-		return "#10b981", "📄"
+		return "#10b981", "document"
 	case strings.Contains(name, "download"):
-		return "#f59e0b", "⬇️"
+		return "#f59e0b", "download"
 	case strings.Contains(name, "library"):
-		return "#6366f1", "📚"
+		return "#6366f1", "library"
 	case strings.Contains(name, "application"):
-		return "#3b82f6", "📱"
+		return "#3b82f6", "apps"
 	case strings.Contains(name, "backup") || strings.Contains(name, "time machine"):
-		return "#8b5cf6", "💾"
+		return "#8b5cf6", "backup"
 	default:
-		return "#71717a", "📁"
+		return "#71717a", "folder"
 	}
 }
