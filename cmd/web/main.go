@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/subtle"
 	"embed"
 	"encoding/base64"
@@ -795,16 +794,43 @@ func uninstallApps(appPaths []string) CleanResult {
 		// MOLE_NO_CONFIRM=1 skips interactive confirmation
 		// MOLE_GUI_MODE=1 tells the script to use osascript for admin privileges instead of TTY-based sudo
 		cmd.Env = append(os.Environ(), "MOLE_NO_CONFIRM=1", "MOLE_GUI_MODE=1")
-		var output bytes.Buffer
-		cmd.Stdout = &output
-		cmd.Stderr = &output
 
-		err := cmd.Run()
-		outStr := output.String()
+		// Stream output in real-time to SSE clients
+		stdout, _ := cmd.StdoutPipe()
+		stderr, _ := cmd.StderrPipe()
+
+		if err := cmd.Start(); err != nil {
+			writeLog("ERROR: Failed to start uninstall for %s: %v", appPath, err)
+			failed = append(failed, fmt.Sprintf("%s (start failed)", filepath.Base(appPath)))
+			continue
+		}
+
+		var output strings.Builder
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		streamOutput := func(r io.Reader) {
+			defer wg.Done()
+			scanner := bufio.NewScanner(r)
+			for scanner.Scan() {
+				line := scanner.Text()
+				output.WriteString(line + "\n")
+				// Broadcast to SSE in real-time
+				select {
+				case logBroadcast <- stripANSI(line):
+				default:
+				}
+			}
+		}
+
+		go streamOutput(stdout)
+		go streamOutput(stderr)
+
+		err := cmd.Wait()
+		wg.Wait()
 
 		if err != nil {
 			writeLog("ERROR: Uninstallation failed for %s: %v", appPath, err)
-			writeLog("Script Output:\n%s", outStr)
 			failed = append(failed, fmt.Sprintf("%s (%v)", filepath.Base(appPath), err))
 		} else {
 			writeLog("SUCCESS: Uninstalled %s", appPath)
