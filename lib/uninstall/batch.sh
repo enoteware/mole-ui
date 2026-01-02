@@ -323,25 +323,28 @@ batch_uninstall_applications() {
 
     # User confirmed, now request sudo access if needed
     if [[ ${#sudo_apps[@]} -gt 0 ]]; then
+        # In GUI mode (web UI), skip TTY-based sudo - safe_sudo_remove will use osascript
+        if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
+            debug_log "GUI mode: skipping upfront sudo request, will use osascript per-operation"
         # Check if sudo is already cached
-        if ! sudo -n true 2> /dev/null; then
+        elif ! sudo -n true 2> /dev/null; then
             if ! request_sudo_access "Admin required for system apps: ${sudo_apps[*]}"; then
                 echo ""
                 log_error "Admin access denied"
                 return 1
             fi
+            # Start sudo keepalive with robust parent checking (only in TTY mode)
+            parent_pid=$$
+            (while true; do
+                # Check if parent process still exists first
+                if ! kill -0 "$parent_pid" 2> /dev/null; then
+                    exit 0
+                fi
+                sudo -n true
+                sleep 60
+            done 2> /dev/null) &
+            sudo_keepalive_pid=$!
         fi
-        # Start sudo keepalive with robust parent checking
-        parent_pid=$$
-        (while true; do
-            # Check if parent process still exists first
-            if ! kill -0 "$parent_pid" 2> /dev/null; then
-                exit 0
-            fi
-            sudo -n true
-            sleep 60
-        done 2> /dev/null) &
-        sudo_keepalive_pid=$!
     fi
 
     if [[ -t 1 ]]; then start_inline_spinner "Uninstalling apps..."; fi
@@ -351,7 +354,7 @@ batch_uninstall_applications() {
 
     # Perform uninstallations (silent mode, show results at end)
     if [[ -t 1 ]]; then stop_inline_spinner; fi
-    local success_count=0 failed_count=0
+    local success_count=0 failed_count=0 files_cleaned=0 total_items=0
     local -a failed_items=()
     local -a success_items=()
     for detail in "${app_details[@]}"; do
@@ -546,7 +549,9 @@ batch_uninstall_applications() {
         rm -f "$cache_file" 2> /dev/null || true
     fi
 
-    ((total_size_cleaned += total_size_freed))
+    # Accumulate to global counter if it exists (for batch operations)
+    total_size_cleaned=${total_size_cleaned:-0}
+    ((total_size_cleaned += total_size_freed)) || true
     unset failed_items
 
     # Return failure if any apps failed to uninstall

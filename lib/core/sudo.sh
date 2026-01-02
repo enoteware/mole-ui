@@ -94,7 +94,8 @@ _request_password() {
 }
 
 # Flag to indicate we're in GUI mode (no TTY) - operations should use osascript fallback
-export MOLE_GUI_MODE=""
+# Preserve existing value if set from environment (e.g., from web UI)
+export MOLE_GUI_MODE="${MOLE_GUI_MODE:-}"
 
 # GUI-based sudo authentication for non-interactive sessions (e.g., from web UI)
 # In GUI mode, we don't try to cache sudo - instead we set a flag so that
@@ -119,6 +120,13 @@ request_sudo_access() {
 
     # Check if already have sudo access
     if sudo -n true 2> /dev/null; then
+        return 0
+    fi
+
+    # GUI mode explicitly set (e.g., from web UI) → use osascript for admin privileges
+    if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
+        debug_log "GUI mode enabled, using osascript for admin privileges"
+        # In GUI mode, we don't request sudo upfront - safe_sudo_remove will use osascript per-operation
         return 0
     fi
 

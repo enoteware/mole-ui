@@ -792,7 +792,9 @@ func uninstallApps(appPaths []string) CleanResult {
 		// mole uninstall --path <path> --debug
 		writeLog("Executing: %s uninstall --path %s --debug", moleScript, appPath)
 		cmd := exec.Command(moleScript, "uninstall", "--path", appPath, "--debug")
-		cmd.Env = append(os.Environ(), "MOLE_NO_CONFIRM=1")
+		// MOLE_NO_CONFIRM=1 skips interactive confirmation
+		// MOLE_GUI_MODE=1 tells the script to use osascript for admin privileges instead of TTY-based sudo
+		cmd.Env = append(os.Environ(), "MOLE_NO_CONFIRM=1", "MOLE_GUI_MODE=1")
 		var output bytes.Buffer
 		cmd.Stdout = &output
 		cmd.Stderr = &output
