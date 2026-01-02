@@ -323,9 +323,21 @@ batch_uninstall_applications() {
 
     # User confirmed, now request sudo access if needed
     if [[ ${#sudo_apps[@]} -gt 0 ]]; then
-        # In GUI mode (web UI), skip TTY-based sudo - safe_sudo_remove will use osascript
+        # In GUI mode (web UI), use osascript to cache sudo credentials ONCE
+        # This avoids prompting for each file removal
         if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
-            debug_log "GUI mode: skipping upfront sudo request, will use osascript per-operation"
+            # Check if sudo is already cached
+            if ! sudo -n true 2> /dev/null; then
+                debug_log "GUI mode: requesting admin privileges via osascript (one-time)"
+                # Use osascript to run 'sudo -v' which caches credentials for 5 minutes
+                if ! osascript -e 'do shell script "sudo -v" with administrator privileges' 2> /dev/null; then
+                    log_error "Admin access denied"
+                    return 1
+                fi
+                debug_log "GUI mode: sudo credentials cached successfully"
+            else
+                debug_log "GUI mode: sudo already cached, skipping auth dialog"
+            fi
         # Check if sudo is already cached
         elif ! sudo -n true 2> /dev/null; then
             if ! request_sudo_access "Admin required for system apps: ${sudo_apps[*]}"; then

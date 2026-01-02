@@ -128,9 +128,15 @@ safe_sudo_remove() {
 
     debug_log "Removing (sudo): $path"
 
-    # In GUI mode (no TTY), use privileged helper - shows native auth dialog
+    # In GUI mode (no TTY), first check if sudo is already cached (from batch auth)
+    # If cached, use regular sudo which is faster and doesn't prompt
     if [[ "${MOLE_GUI_MODE:-}" == "1" ]]; then
-        debug_log "GUI mode: using privileged helper for: $path"
+        # Try cached sudo first (credentials may have been cached by batch_uninstall)
+        if sudo -n rm -rf "$path" 2> /dev/null; then # SAFE: safe_sudo_remove with cached credentials
+            return 0
+        fi
+
+        debug_log "GUI mode: sudo not cached, using privileged helper for: $path"
 
         # Find the privileged helper in the app bundle
         local helper=""
