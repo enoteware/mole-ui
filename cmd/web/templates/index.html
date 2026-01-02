@@ -1413,9 +1413,13 @@
             if (logEventSource) logEventSource.close();
             logEventSource = new EventSource('/api/logs');
             logEventSource.onmessage = function (e) {
-                // Add to activity log instead of separate log panel
+                // Add to activity log
                 if (e.data && e.data.trim()) {
                     addActivity('log', 'System Log', e.data, 'success');
+                    // Also add to debug log panel if addLogLine exists
+                    if (typeof addLogLine === 'function') {
+                        addLogLine(e.data);
+                    }
                 }
             };
             logEventSource.onerror = function () {
@@ -2614,7 +2618,7 @@
     <script>
         // Log panel functionality
         let logLines = [];
-        let logEventSource = null;
+        // Note: logEventSource is already declared in main script block
 
         function toggleLogPanel() {
             const panel = document.getElementById('log-panel');
@@ -2683,18 +2687,7 @@
             showToast('Preparing logs download...', 'info');
         }
 
-        function connectLogStream() {
-            if (logEventSource) logEventSource.close();
-
-            logEventSource = new EventSource('/api/logs');
-            logEventSource.onmessage = (e) => addLogLine(e.data);
-            logEventSource.onerror = () => {
-                setTimeout(connectLogStream, 3000);
-            };
-        }
-
-        // Start log stream on load
-        document.addEventListener('DOMContentLoaded', connectLogStream);
+        // Note: Log stream is started by startLogStream() which also calls addLogLine()
     </script>
 </body>
 
