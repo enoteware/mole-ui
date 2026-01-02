@@ -49,7 +49,7 @@ if [[ -n "$app_path" ]]; then
     app_name=$(basename "$app_path" .app)
     bundle_id="unknown"
     if [[ -e "$app_path/Contents/Info.plist" ]]; then
-        bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2>/dev/null || echo "unknown")
+        bundle_id=$(defaults read "$app_path/Contents/Info.plist" CFBundleIdentifier 2> /dev/null || echo "unknown")
     fi
 
     # Create selected_apps array in the format expected by batch_uninstall_applications
