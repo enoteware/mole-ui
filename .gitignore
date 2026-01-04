@@ -74,3 +74,4 @@ vendor/
 tmp/
 temp/
 AGENT.md
+.history/
