@@ -1,0 +1,485 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		/* Main App Sources */
+		1A0001 /* MoleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0001; };
+		1A0002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0002; };
+		1A0003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0003; };
+		1A0004 /* ServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0004; };
+		1A0005 /* MemoryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0005; };
+		/* Widget Sources */
+		1B0001 /* MoleWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0001; };
+		1B0002 /* MemoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0002; };
+		/* Widget Extension */
+		1C0001 /* MoleWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 3B0001; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		/* Frameworks */
+		1D0001 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0001; };
+		1D0002 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0002; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5A0001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3B0001;
+			remoteInfo = MoleWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7A0001 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1C0001 /* MoleWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		/* Main App Sources */
+		2A0001 /* MoleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoleApp.swift; sourceTree = "<group>"; };
+		2A0002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2A0003 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2A0004 /* ServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerManager.swift; sourceTree = "<group>"; };
+		2A0005 /* MemoryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryProvider.swift; sourceTree = "<group>"; };
+		/* Widget Sources */
+		2B0001 /* MoleWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoleWidgetsBundle.swift; sourceTree = "<group>"; };
+		2B0002 /* MemoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWidget.swift; sourceTree = "<group>"; };
+		/* Products */
+		3A0001 /* MoleSwift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoleSwift.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B0001 /* MoleWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoleWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		/* Frameworks */
+		4D0001 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		4D0002 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		/* Resources */
+		2A0010 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		/* Entitlements */
+		2A0020 /* MoleSwift.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoleSwift.entitlements; sourceTree = "<group>"; };
+		2B0020 /* MoleWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoleWidgets.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8A0001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8B0001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D0001 /* WidgetKit.framework in Frameworks */,
+				1D0002 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9A0001 = {
+			isa = PBXGroup;
+			children = (
+				9A0002 /* MoleApp.swiftapp */,
+				9A0003 /* MoleWidgets */,
+				9A0004 /* Products */,
+				9A0005 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		9A0002 /* MoleApp.swiftapp */ = {
+			isa = PBXGroup;
+			children = (
+				9A0006 /* Sources */,
+				9A0007 /* Resources */,
+				2A0020 /* MoleSwift.entitlements */,
+			);
+			path = MoleApp.swiftapp;
+			sourceTree = "<group>";
+		};
+		9A0003 /* MoleWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				2B0001 /* MoleWidgetsBundle.swift */,
+				2B0002 /* MemoryWidget.swift */,
+				2B0020 /* MoleWidgets.entitlements */,
+			);
+			path = MoleWidgets;
+			sourceTree = "<group>";
+		};
+		9A0004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3A0001 /* MoleSwift.app */,
+				3B0001 /* MoleWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9A0005 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4D0001 /* WidgetKit.framework */,
+				4D0002 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		9A0006 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				2A0001 /* MoleApp.swift */,
+				2A0002 /* AppDelegate.swift */,
+				2A0003 /* ContentView.swift */,
+				2A0004 /* ServerManager.swift */,
+				2A0005 /* MemoryProvider.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		9A0007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2A0010 /* AppIcon.icns */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0001 /* MoleSwift */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA0001 /* Build configuration list for PBXNativeTarget "MoleSwift" */;
+			buildPhases = (
+				BA0001 /* Sources */,
+				8A0001 /* Frameworks */,
+				DA0001 /* Resources */,
+				7A0001 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EA0001 /* PBXTargetDependency */,
+			);
+			name = MoleSwift;
+			productName = MoleSwift;
+			productReference = 3A0001 /* MoleSwift.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AB0001 /* MoleWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB0001 /* Build configuration list for PBXNativeTarget "MoleWidgets" */;
+			buildPhases = (
+				BB0001 /* Sources */,
+				8B0001 /* Frameworks */,
+				DB0001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoleWidgets;
+			productName = MoleWidgets;
+			productReference = 3B0001 /* MoleWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6A0001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AA0001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					AB0001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = CC0001 /* Build configuration list for PBXProject "MoleApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9A0001;
+			productRefGroup = 9A0004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA0001 /* MoleSwift */,
+				AB0001 /* MoleWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DA0001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DB0001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BA0001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0001 /* MoleApp.swift in Sources */,
+				1A0002 /* AppDelegate.swift in Sources */,
+				1A0003 /* ContentView.swift in Sources */,
+				1A0004 /* ServerManager.swift in Sources */,
+				1A0005 /* MemoryProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB0001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B0001 /* MoleWidgetsBundle.swift in Sources */,
+				1B0002 /* MemoryWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EA0001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB0001 /* MoleWidgets */;
+			targetProxy = 5A0001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		/* Debug - Project */
+		FA0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		/* Release - Project */
+		FA0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		/* Debug - MoleSwift */
+		FB0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MoleApp.swiftapp/MoleSwift.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Mole;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Mole needs permission to control system events for authentication when uninstalling protected apps.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mole.swift;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		/* Release - MoleSwift */
+		FB0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MoleApp.swiftapp/MoleSwift.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Mole;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Mole needs permission to control system events for authentication when uninstalling protected apps.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mole.swift;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		/* Debug - MoleWidgets */
+		FC0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MoleWidgets/MoleWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_CFBundleDisplayName = MoleWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mole.swift.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		/* Release - MoleWidgets */
+		FC0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MoleWidgets/MoleWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_CFBundleDisplayName = MoleWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mole.swift.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CC0001 /* Build configuration list for PBXProject "MoleApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA0001 /* Debug */,
+				FA0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CA0001 /* Build configuration list for PBXNativeTarget "MoleSwift" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB0001 /* Debug */,
+				FB0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CB0001 /* Build configuration list for PBXNativeTarget "MoleWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FC0001 /* Debug */,
+				FC0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6A0001 /* Project object */;
+}

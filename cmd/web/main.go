@@ -180,6 +180,7 @@ func main() {
 	http.HandleFunc("/api/analyze/large", basicAuth(handleAnalyzeLarge))
 	http.HandleFunc("/api/analyze/downloads", basicAuth(handleAnalyzeDownloads))
 	http.HandleFunc("/api/storage/breakdown", basicAuth(handleStorageBreakdown))
+	http.HandleFunc("/api/storage/analyze-other", basicAuth(handleAnalyzeOther))
 	http.HandleFunc("/api/volumes", basicAuth(handleListVolumes))
 	http.HandleFunc("/api/volumes/analyze", basicAuth(handleAnalyzeVolume))
 	http.HandleFunc("/api/open-finder", basicAuth(handleOpenFinder))
@@ -268,6 +269,7 @@ func openURL(url string) {
 // Status API - returns system metrics as JSON
 type SystemStatus struct {
 	Hostname    string      `json:"hostname"`
+	HomeDir     string      `json:"home_dir"`
 	LocalIP     string      `json:"local_ip"`
 	OS          string      `json:"os"`
 	Uptime      string      `json:"uptime"`
@@ -314,6 +316,7 @@ func collectStatus() SystemStatus {
 	status := SystemStatus{
 		CollectedAt: time.Now(),
 		Version:     getCurrentVersion(),
+		HomeDir:     os.Getenv("HOME"),
 	}
 
 	if info, err := host.Info(); err == nil {
@@ -1424,6 +1427,155 @@ func handleStorageBreakdown(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(breakdown)
 }
 
+// OtherCategory represents a directory contributing to "Other" storage
+type OtherCategory struct {
+	Path      string  `json:"path"`
+	Name      string  `json:"name"`
+	Size      int64   `json:"size"`
+	SizeHuman string  `json:"size_human"`
+	Percent   float64 `json:"percent"`
+	Type      string  `json:"type"`
+	Icon      string  `json:"icon"`
+}
+
+type OtherBreakdown struct {
+	TotalOther      int64           `json:"total_other"`
+	TotalOtherHuman string          `json:"total_other_human"`
+	Categories      []OtherCategory `json:"categories"`
+}
+
+func handleAnalyzeOther(w http.ResponseWriter, r *http.Request) {
+	home := os.Getenv("HOME")
+
+	// Get disk usage
+	usage, err := disk.Usage("/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Define the known categorized paths (same as in handleStorageBreakdown)
+	categorizedPaths := map[string]bool{
+		"/Applications":                              true,
+		filepath.Join(home, "Documents"):             true,
+		filepath.Join(home, "Downloads"):             true,
+		filepath.Join(home, "Desktop"):               true,
+		filepath.Join(home, "Pictures"):              true,
+		filepath.Join(home, "Movies"):                true,
+		filepath.Join(home, "Music"):                 true,
+		filepath.Join(home, "code"):                  true,
+		"/Volumes/data/docker":                       true,
+		"/Volumes/data/media-hub":                    true,
+		"/Volumes/data/Photos Library.photoslibrary": true,
+		filepath.Join(home, "Library"):               true,
+	}
+
+	// Calculate categorized size
+	var categorizedSize int64
+	for path := range categorizedPaths {
+		categorizedSize += getDirSize(path)
+	}
+	otherSize := int64(usage.Used) - categorizedSize
+
+	// Define directories to scan for "Other" breakdown
+	// These are major directories that might contain significant data
+	otherDirs := []struct {
+		path    string
+		name    string
+		dirType string
+		icon    string
+	}{
+		// System directories
+		{"/private/var", "System Data (var)", "system", "settings"},
+		{"/System", "macOS System", "system", "apple"},
+		{"/usr", "Unix Programs", "system", "terminal"},
+		{"/opt", "Optional Software", "system", "package"},
+		// User hidden directories
+		{filepath.Join(home, ".local"), "Local Data", "user", "folder"},
+		{filepath.Join(home, ".cache"), "User Cache", "cache", "trash"},
+		{filepath.Join(home, ".docker"), "Docker Config", "developer", "docker"},
+		{filepath.Join(home, ".npm"), "NPM Cache", "developer", "package"},
+		{filepath.Join(home, ".cargo"), "Rust/Cargo", "developer", "code"},
+		{filepath.Join(home, ".rustup"), "Rustup", "developer", "code"},
+		{filepath.Join(home, ".gradle"), "Gradle Cache", "developer", "code"},
+		{filepath.Join(home, ".m2"), "Maven Cache", "developer", "code"},
+		{filepath.Join(home, ".vscode"), "VS Code", "developer", "code"},
+		{filepath.Join(home, ".cursor"), "Cursor IDE", "developer", "code"},
+		{filepath.Join(home, ".orbstack"), "OrbStack", "developer", "docker"},
+		{filepath.Join(home, ".lima"), "Lima VMs", "developer", "docker"},
+		{filepath.Join(home, ".vagrant.d"), "Vagrant", "developer", "docker"},
+		// Other Volumes
+		{"/Volumes", "External Volumes", "volumes", "harddrive"},
+	}
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var categories []OtherCategory
+
+	for _, dir := range otherDirs {
+		// Skip if this path is categorized
+		if categorizedPaths[dir.path] {
+			continue
+		}
+		wg.Add(1)
+		go func(path, name, dirType, icon string) {
+			defer wg.Done()
+			size := getDirSize(path)
+			if size > 10*1024*1024 { // Only include if > 10MB
+				mu.Lock()
+				categories = append(categories, OtherCategory{
+					Path:      path,
+					Name:      name,
+					Size:      size,
+					SizeHuman: formatBytes(size),
+					Percent:   float64(size) / float64(otherSize) * 100,
+					Type:      dirType,
+					Icon:      icon,
+				})
+				mu.Unlock()
+			}
+		}(dir.path, dir.name, dir.dirType, dir.icon)
+	}
+
+	wg.Wait()
+
+	// Sort by size descending
+	for i := 0; i < len(categories); i++ {
+		for j := i + 1; j < len(categories); j++ {
+			if categories[j].Size > categories[i].Size {
+				categories[i], categories[j] = categories[j], categories[i]
+			}
+		}
+	}
+
+	// Calculate unaccounted space
+	var accountedOther int64
+	for _, cat := range categories {
+		accountedOther += cat.Size
+	}
+	unaccounted := otherSize - accountedOther
+	if unaccounted > 100*1024*1024 { // > 100MB
+		categories = append(categories, OtherCategory{
+			Path:      "",
+			Name:      "Unaccounted (System/Protected)",
+			Size:      unaccounted,
+			SizeHuman: formatBytes(unaccounted),
+			Percent:   float64(unaccounted) / float64(otherSize) * 100,
+			Type:      "system",
+			Icon:      "lock",
+		})
+	}
+
+	breakdown := OtherBreakdown{
+		TotalOther:      otherSize,
+		TotalOtherHuman: formatBytes(otherSize),
+		Categories:      categories,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(breakdown)
+}
+
 func handleOptimize(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1440,7 +1592,13 @@ func handleOptimize(w http.ResponseWriter, r *http.Request) {
 	if err := exec.Command("dscacheutil", "-flushcache").Run(); err == nil {
 		output.WriteString("Flushed\n")
 	} else {
-		output.WriteString("Skipped (requires admin)\n")
+		// Attempt with sudo via osascript
+		adminCmd := exec.Command("osascript", "-e", `do shell script "dscacheutil -flushcache; killall -HUP mDNSResponder" with administrator privileges`)
+		if err := adminCmd.Run(); err == nil {
+			output.WriteString("Flushed (with admin)\n")
+		} else {
+			output.WriteString("Skipped (requires admin)\n")
+		}
 	}
 
 	// 2. Clear QuickLook thumbnails
@@ -1466,7 +1624,14 @@ func handleOptimize(w http.ResponseWriter, r *http.Request) {
 	if err := exec.Command("purge").Run(); err == nil {
 		output.WriteString("Inactive memory purged\n")
 	} else {
-		output.WriteString("Skipped (requires admin)\n")
+		// Attempt with sudo via osascript as requested by user
+		writeLog("Memory purge requires admin privileges, prompting user...")
+		adminCmd := exec.Command("osascript", "-e", `do shell script "purge" with administrator privileges`)
+		if err := adminCmd.Run(); err == nil {
+			output.WriteString("Memory purged (with admin)\n")
+		} else {
+			output.WriteString("Skipped (requires admin)\n")
+		}
 	}
 
 	// 5. Rebuild Spotlight index for user folders

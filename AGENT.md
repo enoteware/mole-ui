@@ -217,3 +217,21 @@ Button("Check for Updates...") {
 - **Never commit the private EdDSA key** - store in CI secrets or local keychain
 - **Always notarize** the app for Gatekeeper compliance
 - Sparkle validates signatures before installing updates
+
+## 9. macOS Widgets (Work in Progress)
+
+Support for macOS WidgetKit widgets has been added, starting with a Memory Usage/Pressure widget.
+
+### Architecture
+- **Provider**: `MoleApp.swiftapp/Sources/MemoryProvider.swift` uses Mach APIs (`host_statistics64`) for high-fidelity memory stats.
+- **Sharing**: Shared data between the main app and widget is managed via App Groups (`group.com.mole.swift`).
+- **Extensions**: Located in `MoleWidgets/`.
+- **Build System**: Migrated from raw `swiftc` to `xcodebuild` via `MoleApp.xcodeproj` to support widget extension bundling.
+
+### Resuming Work
+The widget implementation is complete but requires the full **Xcode** application to build (not just CLT).
+1. Ensure Xcode is installed.
+2. Select Xcode as active: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
+3. Run build script: `./build-swift-app.sh`
+4. Verify widget: `MoleSwift.app` should contain `PlugIns/MoleWidgets.appex`.
+
